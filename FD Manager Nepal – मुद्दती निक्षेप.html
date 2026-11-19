@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FD Manager Nepal – मुद्दती निक्षेप</title>
+<style>
+:root{--bg:#f6f3ee;--card:#fff;--ink:#1d2433;--mut:#6b7280;--line:#e8e2d8;--acc:#c8102e;--acc2:#003893;--ok:#16794c;--soft:#fbeff1;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1420;--card:#171e2e;--ink:#eef1f7;--mut:#9aa4b8;--line:#263049;--acc:#ff5a73;--acc2:#7aa2ff;--ok:#4fd08f;--soft:#2a1e26;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1420;--card:#171e2e;--ink:#eef1f7;--mut:#9aa4b8;--line:#263049;--acc:#ff5a73;--acc2:#7aa2ff;--ok:#4fd08f;--soft:#2a1e26;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI","Noto Sans Devanagari",Roboto,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:16px}
+.hero{background:linear-gradient(135deg,#003893 0%,#1d2f7a 55%,#c8102e 130%);color:#fff;border-radius:22px;padding:20px;box-shadow:0 10px 30px rgba(0,56,147,.25)}
+.hero h1{margin:0;font-size:20px}.hero small{opacity:.8}
+.big{font-size:30px;font-weight:700;margin:10px 0 2px;letter-spacing:-.5px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.stats div{background:rgba(255,255,255,.14);border-radius:14px;padding:10px}
+.stats b{display:block;font-size:14px}.stats span{font-size:11px;opacity:.85}
+.next{margin-top:12px;font-size:13px;background:rgba(255,255,255,.14);border-radius:12px;padding:8px 12px}
+.tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:5px;margin:16px 0}
+.tabs button{flex:1;border:0;background:none;color:var(--mut);padding:10px;border-radius:10px;font:600 14px inherit;font-family:inherit;cursor:pointer}
+.tabs button.on{background:var(--acc);color:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px;font-weight:600}
+input,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
+input:focus,select:focus{outline:2px solid var(--acc2);border-color:transparent}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg label{margin:0;flex:1;min-width:30%}
+.seg input{display:none}
+.seg span{display:block;text-align:center;padding:9px 4px;border:1px solid var(--line);border-radius:11px;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;background:var(--bg)}
+.seg input:checked+span{background:var(--acc2);color:#fff;border-color:var(--acc2)}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.tile{background:var(--soft);border-radius:14px;padding:12px}
+.tile span{font-size:11px;color:var(--mut);display:block}.tile b{font-size:17px}
+.tile.main{grid-column:1/-1;background:linear-gradient(135deg,var(--acc),#8b0a20);color:#fff}
+.tile.main span{color:#fff;opacity:.85}.tile.main b{font-size:26px}
+.btn{width:100%;border:0;border-radius:13px;padding:14px;background:var(--acc);color:#fff;font:700 16px inherit;font-family:inherit;cursor:pointer;margin-top:14px}
+.btn.ghost{background:none;color:var(--mut);border:1px solid var(--line);padding:8px;font-size:13px;margin-top:0}
+.tw{overflow-x:auto;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:420px}
+th,td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}th{color:var(--mut);font-size:11px}
+.fd h3{margin:0;font-size:17px}.fd .sub{color:var(--mut);font-size:13px}
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--soft);color:var(--acc)}
+.badge.done{background:#e3f5ec;color:var(--ok)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .badge.done{background:#17382b}}
+.bar{height:8px;background:var(--line);border-radius:9px;overflow:hidden;margin:12px 0 6px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc2),var(--acc));border-radius:9px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;font-size:13px}
+.kv span{color:var(--mut);display:block;font-size:11px}
+.acts{display:flex;gap:8px;margin-top:12px}
+.empty{text-align:center;color:var(--mut);padding:36px 10px}
+.note{font-size:12px;color:var(--mut);margin-top:10px}
+.hide{display:none}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}.tools .btn{flex:1;min-width:45%}
+.editing{background:var(--soft);color:var(--acc);padding:9px 12px;border-radius:11px;font-size:13px;font-weight:600;margin-bottom:12px}
+.grid3{display:grid;grid-template-columns:1fr 1.5fr .8fr;gap:8px}.ad{font-size:11px;color:var(--mut)}.next .ad{color:inherit;opacity:.8}
+.dm,.lg{display:flex;background:rgba(255,255,255,.18);border-radius:10px;padding:3px}.dm button,.lg button{border:0;background:none;color:#fff;padding:5px 11px;border-radius:8px;font:600 12px inherit;font-family:inherit;cursor:pointer;opacity:.75}.dm button.on,.lg button.on{background:#fff;color:#003893;opacity:1}
+.ev{padding:8px 0;border-top:1px solid var(--line);margin-top:8px}.ev a{text-decoration:none}
+.cols{display:flex;gap:4px;align-items:flex-end;height:150px;margin-top:10px}.col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;font-size:10px;color:var(--mut);height:100%}.col i{display:block;width:100%;background:linear-gradient(var(--acc),var(--acc2));border-radius:5px 5px 0 0;min-height:2px}.hb{margin-top:10px;font-size:13px}.hb .bar{margin:6px 0 0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:5px 11px;border-radius:99px;font:600 12px inherit;font-family:inherit;cursor:pointer;display:inline-block}.chip.on{background:var(--acc2);color:#fff;border-color:var(--acc2)}.tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--acc);margin-left:6px;vertical-align:middle}
+.prof{display:flex;gap:8px;margin-top:14px;align-items:center}.prof select,.prof input{flex:1;min-width:0}.prof .btn{width:auto;padding:10px 12px;white-space:nowrap}
+.acts{flex-wrap:wrap}.acts .btn{flex:1;min-width:30%}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50;padding-top:env(safe-area-inset-top,0px)}.modal.hide{display:none}.sheet{background:var(--card);color:var(--ink);width:100%;max-width:760px;max-height:92%;overflow:auto;border-radius:22px 22px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px))}
+.rcp{margin-top:12px;border-top:2px dashed var(--line)}.rr{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}.rr span{color:var(--mut)}.rr b{text-align:right}
+.al{border-radius:14px;padding:12px;margin-top:12px;border:1px solid var(--line)}.al .sub{color:inherit;opacity:.88}
+.al.i{background:rgba(240,180,0,.14);border-color:rgba(240,180,0,.55)}.al.r{background:rgba(200,16,46,.12);border-color:var(--acc)}.al.m{background:rgba(200,16,46,.16);border:2px solid var(--acc)}
+.al.f{background:#c8102e;border-color:#c8102e;color:#fff;animation:fl 1s ease-in-out infinite}.al.f .tag{color:#fff;background:rgba(255,255,255,.22)}.al.f .btn.ghost{color:#fff;border-color:rgba(255,255,255,.7)}
+@keyframes fl{0%,100%{background:#c8102e;box-shadow:0 0 0 0 rgba(200,16,46,.55)}50%{background:#7a0a1c;box-shadow:0 0 0 9px rgba(200,16,46,0)}}
+@media(prefers-reduced-motion:reduce){.al.f{animation:none}}
+</style><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script></head>
+<body><div class="wrap">
+<div class="hero">
+  <div class="row"><h1>🏦 FD Manager <small>· मुद्दती निक्षेप</small></h1><div style="display:flex;gap:6px"><div class="dm"><button data-dm="BS">BS</button><button data-dm="AD">AD</button></div><div class="lg"><button data-lg="en">EN</button><button data-lg="ne">ने</button></div></div></div>
+  <div class="big" id="hTot">रू 0.00</div><small>Total principal invested</small>
+  <div class="stats">
+    <div><b id="hInt">–</b><span>Net interest (after TDS)</span></div>
+    <div><b id="hMat">–</b><span>Total at maturity</span></div>
+    <div><b id="hCnt">0</b><span>Active deposits</span></div>
+  </div>
+  <div class="next hide" id="hNext"></div>
+</div>
+
+<div class="prof"><select id="pSel"></select><input id="pName" class="hide" placeholder="Profile name, then Enter"><button class="btn ghost" id="pAdd">＋ Profile</button><button class="btn ghost hide" id="pDel">Delete</button></div>
+<div id="alerts"></div>
+<div class="tabs"><button class="on" data-t="list">My FDs</button><button data-t="ins">Insights</button><button data-t="add">Add / Calculate</button><button data-t="set">Settings</button></div>
+
+<div id="listWrap"><div class="tools"><button class="btn ghost" id="exJ">⬇ Export JSON</button><button class="btn ghost" id="exX">⬇ Export Excel</button><button class="btn ghost" id="imp">⬆ Import JSON / Excel</button><button class="btn ghost" id="shAll">📤 Share summary</button><button class="btn ghost" id="pdf">📄 PDF report</button><button class="btn ghost" id="clr">Clear all</button></div><input type="file" id="file" accept=".json,.xlsx,.xls,.csv" class="hide"><div class="note" id="msg" style="margin:0 0 12px"></div><div id="bk"></div><div id="fbar" class="hide" style="margin-bottom:12px"><input id="q" placeholder="Search bank, holder, tag, amount…"><div class="chips" id="chips"></div></div><div id="rem"></div><div id="list"></div></div>
+
+<div id="insights" class="hide"></div><div id="settings" class="hide"></div><div id="modal" class="modal hide"></div><div id="add" class="hide"><div class="editing hide" id="eb"></div><div id="quick"></div><div id="tplBar"></div>
+ <div class="card"><div class="grid">
+  <div><label>Bank / Institution</label><input id="bank" list="banks" autocomplete="off" placeholder="e.g. Nabil Bank"><datalist id="banks"></datalist></div>
+  <div><label>Label / Holder</label><input id="holder" placeholder="e.g. Personal"></div>
+  <div><label>Principal (रू)</label><input id="P" type="number" inputmode="decimal" value="500000"></div>
+  <div><label>Interest rate (% p.a.)</label><input id="r" type="number" inputmode="decimal" step="0.01" value="9"></div>
+  <div class="full chips" style="margin:-2px 0 0"><span class="chip" data-amt="100000">1L</span><span class="chip" data-amt="500000">5L</span><span class="chip" data-amt="1000000">10L</span><span class="chip" data-amt="2500000">25L</span><span class="chip" data-amt="5000000">50L</span><span class="chip" data-amt="10000000">1Cr</span></div><div><label>Term (BS months)</label><input id="term" type="number" inputmode="numeric" value="12"></div>
+  <div><label>Unit</label><select id="unit"><option value="1">Months</option><option value="12">Years</option></select></div>
+  <div class="full chips" style="margin:-2px 0 0"><span class="chip" data-trm="6">6M</span><span class="chip" data-trm="12">1Y</span><span class="chip" data-trm="13">13M</span><span class="chip" data-trm="24">2Y</span><span class="chip" data-trm="36">3Y</span><span class="chip" data-trm="60">5Y</span></div><div class="full"><label>Tag / category</label><input id="tag" list="tags" placeholder="e.g. Retirement, Education"><datalist id="tags"></datalist></div><div class="full"><label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" id="rmd" checked style="width:auto"><span>Remind me before maturity (30 / 15 / 10 days)</span></label></div><div class="full"><label>Start date</label><div class="seg" style="margin-bottom:8px"><label><input type="radio" name="dsys" value="BS" checked><span>BS · बि.सं.</span></label><label><input type="radio" name="dsys" value="AD"><span>AD</span></label></div><div id="bsIn" class="grid3"><select id="bY"></select><select id="bM"></select><select id="bD"></select></div><input id="start" type="date" class="hide"><div class="note" id="conv" style="margin-top:6px"></div></div>
+  <div><label>TDS on interest (%)</label><input id="tds" type="number" inputmode="decimal" step="0.1" value="5"></div><div><label>Maturity date (calculated)</label><input id="matOut" readonly></div>
+  <div class="full"><label>Interest basis</label><div class="seg"><label><input type="radio" name="basis" value="bs" checked><span>BS months · actual days ÷ 365</span></label><label><input type="radio" name="basis" value="simple"><span>Simple · months ÷ 12</span></label></div></div>
+  <div class="full"><label>Interest handling</label>
+   <div class="seg"><label><input type="radio" name="mode" value="payout" checked><span>Pay out interest</span></label><label><input type="radio" name="mode" value="compound"><span>Reinvest (compound)</span></label></div></div>
+  <div class="full"><label>Frequency</label>
+   <div class="seg"><label><input type="radio" name="freq" value="q" checked><span>Bank quarter-end</span></label><label><input type="radio" name="freq" value="1"><span>Monthly</span></label><label><input type="radio" name="freq" value="3"><span>Quarterly</span></label><label><input type="radio" name="freq" value="6"><span>Half-yearly</span></label><label><input type="radio" name="freq" value="12"><span>Annually</span></label><label><input type="radio" name="freq" value="0"><span>At maturity</span></label><label><input type="radio" name="freq" value="c"><span>Custom</span></label></div></div>
+  <div class="full note" style="margin:0">Bank quarter-end: accrued interest is paid on the last day of Ashadh, Ashwin, Poush and Chaitra, whatever the opening date.</div><div class="full hide" id="cWrap"><label>Custom: every N months</label><input id="cN" type="number" inputmode="numeric" value="2" min="1"></div>
+ </div></div>
+ <div class="card"><div class="res" id="res"></div><div class="tw" id="sched"></div>
+  <button class="btn" id="save">Save this FD</button><button class="btn ghost hide" id="cancel" style="margin-top:8px">Cancel edit</button><button class="btn ghost" id="tplSave" style="margin-top:8px">⭐ Save as template</button>
+  <p class="note">Interest = Principal × Rate ÷ 12 × months per period. TDS is withheld on interest only (5% is the usual rate for individuals; edit if yours differs). Figures are estimates, so confirm with your bank.</p></div>
+</div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const NPR=n=>'रू '+Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY='fd-nepal-v1';let fds=[];
+let PROFS=[{id:'p1',name:'Personal'}],PID='p1';const kOf=p=>p==='p1'?KEY:KEY+':'+p;
+try{PROFS=JSON.parse(localStorage.getItem('fd-profs'))||PROFS;PID=localStorage.getItem('fd-pid')||'p1';if(!PROFS.some(p=>p.id===PID))PID=PROFS[0].id}catch(e){}
+try{fds=JSON.parse(localStorage.getItem(kOf(PID))||'[]')}catch(e){fds=[]}
+const persist=()=>{try{localStorage.setItem(kOf(PID),JSON.stringify(fds));localStorage.setItem('fd-dirty','1')}catch(e){}};
+const pd=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const addM=(s,m)=>{const d=pd(s),day=d.getDate();const t=new Date(d.getFullYear(),d.getMonth()+m,1);const last=new Date(t.getFullYear(),t.getMonth()+1,0).getDate();t.setDate(Math.min(day,last));return t};
+const fmt=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+
+function calc(o){if(o.basis==='bs'){const b=calcBS(o);if(b)return b}
+  const f=o.f>0?o.f:o.months,n=Math.ceil(o.months/f-1e-9),rows=[];
+  let bal=o.P,gross=0,tax=0;
+  for(let i=1;i<=n;i++){
+    const m=Math.min(f,o.months-(i-1)*f),base=o.mode==='compound'?bal:o.P;
+    const int=base*o.r/1200*m,t=int*o.tds/100;
+    gross+=int;tax+=t;if(o.mode==='compound')bal+=int;
+    rows.push({d:addM(o.start,Math.min(i*f,o.months)),int,t,net:int-t,bal:o.P+(o.mode==='compound'?gross:0)});
+  }
+  const net=gross-tax,eff=o.mode==='compound'?(Math.pow(1+gross/o.P,12/o.months)-1)*100:o.r;
+  return{rows,gross,tax,net,total:o.P+net,eff,end:addM(o.start,o.months)};
+}
+function readForm(){
+  const fv=$('input[name=freq]:checked').value;
+  const months=Math.round(parseFloat($('#term').value)*parseFloat($('#unit').value));
+  return{bank:$('#bank').value.trim()||'Fixed deposit',holder:$('#holder').value.trim(),P:parseFloat($('#P').value),r:parseFloat($('#r').value),months,start:getStart(),remind:$('#rmd').checked,tag:($('#tag').value||'').trim(),basis:fv==='q'?'bs':$('input[name=basis]:checked').value,tds:parseFloat($('#tds').value)||0,
+    mode:$('input[name=mode]:checked').value,freq:fv,f:fv==='c'?Math.max(1,parseInt($('#cN').value)||1):fv==='q'?3:parseInt(fv)};
+}
+const valid=o=>o.P>0&&o.r>=0&&o.months>=1&&o.start;
+const schedHTML=(c,comp)=>`<table><tr><th>Date</th>${c.basis?'<th>Days</th>':''}<th>Interest</th><th>TDS</th><th>Net</th>${comp?'<th>Balance</th>':''}</tr>${c.rows.map(x=>`<tr><td>${dstr(x.d,1)}</td>${c.basis?`<td>${x.days}</td>`:''}<td>${NPR(x.int)}</td><td>${NPR(x.t)}</td><td><b>${NPR(x.net)}</b></td>${comp?`<td>${NPR(x.bal)}</td>`:''}</tr>`).join('')}</table>`+monHTML(c);
+
+function preview0(e){syncDate(e);
+  const o=readForm();$('#cWrap').classList.toggle('hide',o.freq!=='c');
+  if(!valid(o)){$('#res').innerHTML='<div class="tile main"><span>Enter valid details</span><b>–</b></div>';$('#sched').innerHTML='';return}
+  const c=calc(o);
+  $('#res').innerHTML=`<div class="tile main"><span>Total at maturity · ${dstr(c.end)}</span><b>${NPR(c.total)}</b></div>
+  <div class="tile"><span>Gross interest</span><b>${NPR(c.gross)}</b></div><div class="tile"><span>TDS deducted</span><b>${NPR(c.tax)}</b></div>
+  <div class="tile"><span>Net interest</span><b>${NPR(c.net)}</b></div><div class="tile"><span>Effective yield p.a.</span><b>${c.eff.toFixed(2)}%</b></div>`;
+  $('#sched').innerHTML=schedHTML(c,o.mode==='compound');$('#matOut').value=dtxt(c.end);
+}
+
+function render0(){
+  const today=new Date();today.setHours(0,0,0,0);
+  let P=0,I=0,T=0,act=0,next=null;
+  const items=fds.map(o=>{const c=calc(o),end=c.end,st=pd(o.start),done=end<=today;
+    if(!done&&!o.closed){act++;c.rows.forEach(x=>{if(x.d>=today&&(!next||x.d<next.d))next={d:x.d,v:x.net,b:o.bank}})}
+    if(!o.closed&&!o.renewed){P+=o.P;I+=c.net;T+=c.total}return{o,c,end,st,done}}).sort((a,b)=>a.end-b.end);
+  $('#hTot').textContent=NPR(P);$('#hInt').textContent=NPR(I);$('#hMat').textContent=NPR(T);$('#hCnt').textContent=act;
+  const hn=$('#hNext');hn.classList.toggle('hide',!next);if(next)hn.innerHTML=`⏰ <span>Next payout:</span> <b>${NPR(next.v)}</b> <span>from</span> ${esc(next.b)} <span>on</span> ${dstr(next.d)}`;
+  if(!items.length){$('#list').innerHTML='<div class="card empty"><span>No fixed deposits yet.</span><br><span>Tap</span> <b>Add / Calculate</b> <span>to record your first one.</span></div>';return}
+  $('#list').innerHTML=items.filter(z=>fmatch(z.o)).map(({o,c,end,st,done},i)=>{
+    const pct=Math.max(0,Math.min(100,(today-st)/(end-st)*100)),days=Math.ceil((end-today)/864e5);
+    const fl=o.freq==='q'?'Bank quarter-end':o.freq==='0'?'At maturity':o.freq==='c'?`Every ${o.f} mo`:({1:'Monthly',3:'Quarterly',6:'Half-yearly',12:'Annually'})[o.f];
+    return`<div class="card fd" data-open="${o.id}" style="cursor:pointer${o.closed||o.renewed?';opacity:.6':''}"><div class="row"><div><h3>${esc(o.bank)}${o.tag?` <span class="tag">${esc(o.tag)}</span>`:''}</h3><div class="sub">${esc(o.holder)}${o.holder?' · ':''}${o.r}% · ${o.months} mo · ${o.mode==='compound'?'Compounded':'Paid out'} ${fl.toLowerCase()}${o.basis==='bs'?' · BS days ÷365':''}</div></div>
+    <span class="badge ${done?'done':''}">${o.closed?'Closed':o.renewed?'Renewed':done?'Matured':days+' days left'}</span></div>
+    <div class="bar"><i style="width:${pct}%"></i></div><div class="sub">${dstr(st)} → ${dstr(end)}</div>
+    <div class="kv"><div><span>Principal</span><b>${NPR(o.P)}</b></div><div><span>Total at maturity</span><b>${NPR(c.total)}</b></div><div><span>Net interest</span><b>${NPR(c.net)}</b></div><div><span>TDS</span><b>${NPR(c.tax)}</b></div></div>
+    
+    <div class="acts"><button class="btn ghost" data-ed="${o.id}">✏️ Edit</button>${done&&!o.renewed&&!o.closed?`<button class="btn ghost" data-rn="${o.id}">🔁 Renew</button><button class="btn ghost" data-cl="${o.id}">✖ Cancel</button>`:''}<button class="btn ghost" data-del="${o.id}">Delete</button></div></div>`}).join('');
+}
+
+$('#list').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.sc)$('#s'+b.dataset.sc).classList.toggle('hide');
+  if(b.dataset.ed){const o=fds.find(x=>String(x.id)===b.dataset.ed);if(o){setForm(o);setEdit(o.id);$('.tabs button[data-t=add]').click();window.scrollTo(0,0)}}
+  if(b.dataset.del){if(b.dataset.sure){fds=fds.filter(x=>String(x.id)!==b.dataset.del);persist();render()}else{b.dataset.sure=1;b.textContent='Tap again to confirm'}}
+});
+$$('.tabs button').forEach(b=>b.onclick=()=>{$$('.tabs button').forEach(x=>x.classList.toggle('on',x===b));$('#listWrap').classList.toggle('hide',b.dataset.t!=='list');$('#add').classList.toggle('hide',b.dataset.t!=='add');$('#insights').classList.toggle('hide',b.dataset.t!=='ins');if(b.dataset.t==='ins')renderIns();$('#settings').classList.toggle('hide',b.dataset.t!=='set');if(b.dataset.t==='set')renderSet()});
+$$('#add input,#add select').forEach(el=>{el.addEventListener('input',preview);el.addEventListener('change',preview)});
+$('#save').onclick=()=>{const o=readForm();if(!valid(o)){alert('Please enter principal, rate, term and start date.');return}
+  remember(o);if(editId!=null){o.id=editId;fds=fds.map(x=>x.id===editId?o:x);setEdit(null)}else{o.id=Date.now();fds.push(o);if(renewFrom!=null){const z=fds.find(x=>x.id===renewFrom);if(z)z.renewed=true;renewFrom=null}}persist();render();$('.tabs button[data-t=list]').click();window.scrollTo(0,0)};
+/* ---------- BS engine ---------- */
+const BSN=['Baisakh','Jestha','Ashadh','Shrawan','Bhadra','Ashwin','Kartik','Mangsir','Poush','Magh','Falgun','Chaitra'],
+BSP=['बैशाख','जेष्ठ','आषाढ','श्रावण','भदौ','आश्विन','कार्तिक','मंसिर','पौष','माघ','फाल्गुन','चैत्र'];
+const BSD=[[31,31,31,32,31,31,29,30,30,29,30,30],[31,31,32,31,31,31,30,29,30,29,30,30],[31,32,31,32,31,30,30,29,30,29,30,30],[31,32,31,32,31,30,30,30,29,29,30,31],[31,31,31,32,31,31,30,29,30,29,30,30],[31,31,32,31,31,31,30,29,30,29,30,30],[31,32,31,32,31,30,30,30,29,29,30,30],[31,32,31,32,31,30,30,30,29,30,29,31],[31,31,31,32,31,31,30,29,30,29,30,30],[31,31,32,31,31,31,30,29,30,29,30,30],[31,32,31,32,31,30,30,30,29,29,30,30],[31,32,31,32,31,30,30,30,29,30,29,31],[31,31,32,31,31,31,30,29,30,29,30,30],[31,31,32,31,31,31,30,29,30,29,30,30],[31,32,31,32,31,30,30,30,29,29,30,31],[30,32,31,32,31,30,30,30,29,30,29,31],[31,31,32,31,31,31,30,29,30,29,30,30],[31,31,32,32,31,30,30,29,30,29,30,30],[31,32,31,32,31,30,30,30,29,29,30,31],[30,32,31,32,31,31,29,30,29,30,29,31],[31,31,32,31,31,31,30,29,30,29,30,30],[31,31,32,32,31,30,30,29,30,29,30,30],[31,32,31,32,31,30,30,30,29,29,30,31],[31,31,31,32,31,31,29,30,30,29,29,31],[31,31,32,31,31,31,30,29,30,29,30,30],[31,31,32,32,31,30,30,29,30,29,30,30],[31,32,31,32,31,30,30,30,29,29,30,31],[31,31,31,32,31,31,29,30,30,29,30,30],[31,31,32,31,31,31,30,29,30,29,30,30],[31,32,31,32,31,30,30,29,30,29,30,30]];
+const Y0=2070,NM=BSD.length*12,E=Date.UTC(2013,3,14)/864e5,MS=[0];
+const BSD0=BSD.map(r=>r.slice());
+const rebuildMS=()=>{MS.length=1;BSD.forEach(y=>y.forEach(d=>MS.push(MS[MS.length-1]+d)))};
+let BSOV={};try{BSOV=JSON.parse(localStorage.getItem('fd-bsov')||'{}')}catch(e){}
+Object.keys(BSOV).forEach(y=>{if(BSD[y-Y0]&&Array.isArray(BSOV[y])&&BSOV[y].length===12)BSD[y-Y0]=BSOV[y].slice()});
+rebuildMS();
+const bsDim=(y,m)=>BSD[y-Y0][m-1];
+const bsDay=b=>MS[(b.y-Y0)*12+b.m-1]+b.d-1;
+const dayISO=n=>{const d=new Date((E+n)*864e5);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0')};
+const adDay=s=>{const[a,b,c]=s.split('-').map(Number);return Math.round(Date.UTC(a,b-1,c)/864e5)-E};
+const monIdx=n=>{let i=0;while(i<NM-1&&MS[i+1]<=n)i++;return i};
+function ad2bs(s){if(!s)return null;const n=adDay(s);if(isNaN(n)||n<0||n>=MS[NM])return null;const i=monIdx(n);return{y:Y0+Math.floor(i/12),m:i%12+1,d:n-MS[i]+1}}
+function bs2adISO(y,m,d){if(!(y>=Y0&&y<Y0+BSD.length&&m>=1&&m<=12&&d>=1&&d<=bsDim(y,m)))return null;return dayISO(bsDay({y,m,d}))}
+function addBSM(b,n){const i=(b.y-Y0)*12+b.m-1+n;if(i<0||i>=NM)return null;const y=Y0+Math.floor(i/12),m=i%12+1;return{y,m,d:Math.min(b.d,bsDim(y,m))}}
+function calcBS(o){
+  const sb=ad2bs(o.start);if(!sb)return null;
+  let Q=null;
+  if(o.freq==='q'){const eb=addBSM(sb,o.months);if(!eb)return null;const s0=bsDay(sb),e0=bsDay(eb);Q=[];for(let k=(sb.y-Y0)*12+sb.m;k<NM&&MS[k]<e0;k++)if(k%12%3===0&&MS[k]>s0)Q.push({nd:MS[k],pay:MS[k]-1});Q.push({nd:e0,pay:e0})}
+  const f=o.f>0?o.f:o.months,n=Q?Q.length:Math.ceil(o.months/f-1e-9),rows=[],acc={},comp=o.mode==='compound';
+  let bal=o.P,gross=0,tax=0,tot=0,prev=bsDay(sb);
+  for(let i=1;i<=n;i++){
+    const nb=Q?{}:addBSM(sb,Math.min(i*f,o.months));if(!nb)return null;
+    const nd=Q?Q[i-1].nd:bsDay(nb),days=nd-prev,k0=(comp?bal:o.P)*o.r/36500,int=k0*days,t=int*o.tds/100;
+    for(let k=monIdx(prev);k<NM&&MS[k]<nd;k++){const ov=Math.min(nd,MS[k+1])-Math.max(prev,MS[k]);if(ov>0){const a=acc[k]||(acc[k]={k,int:0,days:0});a.int+=k0*ov;a.days+=ov}}
+    gross+=int;tax+=t;tot+=days;if(comp)bal+=int;
+    rows.push({d:pd(dayISO(Q?Q[i-1].pay:nd)),int,t,net:int-t,bal,days});prev=nd;
+  }
+  const net=gross-tax;
+  return{rows,gross,tax,net,total:o.P+net,eff:comp?(Math.pow(1+gross/o.P,365/tot)-1)*100:o.r,end:rows[rows.length-1].d,basis:'bs',mon:Object.values(acc).sort((a,b)=>a.k-b.k)};
+}
+const monHTML=c=>c.mon?`<div class="note" style="margin:14px 0 0"><b>Month-wise accrual · BS calendar</b></div><table style="min-width:300px"><tr><th>BS month</th><th>Days</th><th>Interest accrued</th></tr>${c.mon.map(z=>`<tr><td>${BSN[z.k%12]} ${Y0+Math.floor(z.k/12)}</td><td>${z.days}</td><td>${NPR(z.int)}</td></tr>`).join('')}</table>`:'';
+let DM='BS';try{DM=localStorage.getItem('fd-dm')||'BS'}catch(e){}
+function dstr(d,blk){const b=ad2bs(iso(d)),ad=fmt(d);if(!b)return ad;const bt=b.d+' '+BSN[b.m-1]+' '+b.y,p=DM==='BS'?bt:ad,s=DM==='BS'?'AD '+ad:'BS '+bt;return p+(blk?'<br><span class="ad">'+s+'</span>':' <span class="ad">('+s+')</span>')}
+function dtxt(d){const b=ad2bs(iso(d));return b?b.d+' '+BSN[b.m-1]+' '+b.y+' BS · '+fmt(d):fmt(d)}
+const bst=s=>{const b=ad2bs(s);return b?b.y+'-'+String(b.m).padStart(2,'0')+'-'+String(b.d).padStart(2,'0'):''};
+$$('.dm button').forEach(b=>{b.classList.toggle('on',b.dataset.dm===DM);b.onclick=()=>{DM=b.dataset.dm;try{localStorage.setItem('fd-dm',DM)}catch(e){}$$('.dm button').forEach(x=>x.classList.toggle('on',x===b));render();preview()}});
+const dsys=()=>$('input[name=dsys]:checked').value;
+function getStart(){return dsys()==='AD'?$('#start').value:(bs2adISO(+$('#bY').value,+$('#bM').value,+$('#bD').value)||'')}
+function fillBS(){$('#bY').innerHTML=Array.from({length:BSD.length},(_,i)=>`<option value="${Y0+i}">${Y0+i}</option>`).join('');$('#bM').innerHTML=BSN.map((n,i)=>`<option value="${i+1}">${n} · ${BSP[i]}</option>`).join('')}
+function fillDays(cur){const n=bsDim(+$('#bY').value,+$('#bM').value);cur=cur||+$('#bD').value||1;$('#bD').innerHTML=Array.from({length:n},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');$('#bD').value=Math.min(cur,n)}
+function setBS(s){const b=ad2bs(s);if(!b)return;$('#bY').value=b.y;$('#bM').value=b.m;fillDays(b.d)}
+function syncDate(e){
+  const t=e&&e.target;
+  if(t&&(t.id==='bY'||t.id==='bM'))fillDays();
+  if(t&&((t.name==='dsys'&&dsys()==='BS')||t.id==='start'))setBS($('#start').value);
+  const bs=dsys()==='BS';
+  $('#bsIn').classList.toggle('hide',!bs);$('#start').classList.toggle('hide',bs);
+  if(bs)$('#start').value=getStart();
+  const s=getStart(),b=ad2bs(s);
+  $('#conv').textContent=!s?'':bs?'AD: '+fmt(pd(s)):(b?'BS: '+b.d+' '+BSN[b.m-1]+' '+b.y+' ('+BSP[b.m-1]+')':'Outside the supported BS range (2070–2099)');
+}
+/* ---------- Edit ---------- */
+let editId=null;
+function setForm(o){
+  $('#bank').value=o.bank;$('#tag').value=o.tag||'';$('#rmd').checked=o.remind!==false;$('#holder').value=o.holder||'';$('#P').value=o.P;$('#r').value=o.r;
+  const y=o.months%12===0;$('#term').value=y?o.months/12:o.months;$('#unit').value=y?12:1;
+  $('#start').value=o.start;setBS(o.start);$('#tds').value=o.tds;$('#cN').value=o.f>0?o.f:2;
+  $('input[name=mode][value="'+o.mode+'"]').checked=true;$('input[name=basis][value="'+(o.basis||'simple')+'"]').checked=true;$('input[name=freq][value="'+o.freq+'"]').checked=true;preview();
+}
+function setEdit(id){renewFrom=null;
+  editId=id;const on=id!=null;$('#save').textContent=on?'Update FD':'Save this FD';
+  $('#cancel').classList.toggle('hide',!on);$('#eb').classList.toggle('hide',!on);
+  if(on)$('#eb').textContent='✏️ Editing: '+fds.find(x=>x.id===id).bank;
+}
+$('#cancel').onclick=()=>{setEdit(null);$('.tabs button[data-t=list]').click()};
+/* ---------- Import / Export ---------- */
+const msg=t=>{$('#msg').textContent=t};
+async function saveFile(name,data){
+  try{const d=window.claude?await window.claude.use('downloads'):null;
+    if(!d){msg('File download is not available in this view.');return}
+    await d.save({filename:name,data});msg('Exported '+name);if(!/\.pdf$/.test(name)){try{localStorage.setItem('fd-dirty','0');localStorage.setItem('fd-lastbk',iso(new Date()))}catch(x){}renderBk()}
+  }catch(e){msg(e&&e.code==='declined'?'Export cancelled.':'Could not export the file.')}
+}
+$('#exJ').onclick=()=>{if(!fds.length)return msg('No records to export.');
+  saveFile('fd-records-'+iso(new Date())+'.json',JSON.stringify({app:'fd-manager-nepal',version:1,exported:iso(new Date()),fds},null,2))};
+$('#exX').onclick=()=>{
+  if(!fds.length)return msg('No records to export.');if(!window.XLSX)return msg('Excel library did not load.');
+  const A=[],S=[],M=[];
+  fds.forEach(o=>{const c=calc(o);
+    (c.mon||[]).forEach(z=>M.push({Bank:o.bank,Holder:o.holder,Month:BSN[z.k%12],Year:Y0+Math.floor(z.k/12),Days:z.days,Interest:+z.int.toFixed(2)}));A.push({Bank:o.bank,Holder:o.holder,Tag:o.tag||'',Principal:o.P,'Rate %':o.r,Months:o.months,'Start Date':o.start,'Start Date (BS)':bst(o.start),'TDS %':o.tds,Mode:o.mode,Basis:o.basis||'simple','Frequency (months)':o.freq==='q'?'q':o.f>0?o.f:0,'Maturity Date':iso(c.end),'Maturity Date (BS)':bst(iso(c.end)),'Gross Interest':+c.gross.toFixed(2),'TDS Amount':+c.tax.toFixed(2),'Net Interest':+c.net.toFixed(2),'Total at Maturity':+c.total.toFixed(2)});
+    c.rows.forEach((x,i)=>S.push({Bank:o.bank,Holder:o.holder,'#':i+1,Date:iso(x.d),'Date (BS)':bst(iso(x.d)),Days:x.days||'',Interest:+x.int.toFixed(2),TDS:+x.t.toFixed(2),Net:+x.net.toFixed(2)}))});
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(A),'FDs');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S),'Payout Schedule');if(M.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(M),'BS Month-wise');
+  saveFile('fd-records-'+iso(new Date())+'.xlsx',XLSX.write(wb,{type:'array',bookType:'xlsx'}));
+};
+function normDate(v){
+  if(typeof v==='number'){const d=new Date(Math.round((v-25569)*864e5));return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0')}
+  const s=String(v||'').trim();const mm=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(mm)return +mm[1]>=Y0?(bs2adISO(+mm[1],+mm[2],+mm[3])||null):s.slice(0,10);const d=new Date(s);return isNaN(d)?null:iso(d);
+}
+function norm(r){
+  if(!r||typeof r!=='object')return null;
+  const m={};for(const k in r)m[k.toLowerCase().replace(/[^a-z]/g,'')]=r[k];
+  const pick=(...a)=>{for(const x of a)if(m[x]!==undefined&&m[x]!=='')return m[x]};
+  const o={bank:String(pick('bank','bankinstitution')||'Fixed deposit').trim(),holder:String(pick('holder','label','labelholder')||'').trim(),tag:String(pick('tag','category')||'').trim(),
+    P:parseFloat(pick('p','principal','principalnpr')),r:parseFloat(pick('r','rate','ratepa')),months:parseInt(pick('months','term')),
+    start:normDate(pick('start','startdate','startdatebs')),tds:parseFloat(pick('tds','tdspercent')),mode:/comp/i.test(String(pick('mode')))?'compound':'payout',basis:/^(bs|actual)/i.test(String(pick('basis')||''))?'bs':'simple'};
+  if(isNaN(o.tds))o.tds=5;
+  const isq=/^q/i.test(String(pick('freq','frequency','frequencymonths')||''));let f=parseInt(pick('f','freq','frequency','frequencymonths'));if(isNaN(f))f=3;
+  o.f=f<=0?0:f;o.freq=isq?'q':[1,3,6,12].includes(f)?String(f):f<=0?'0':'c';if(isq)o.basis='bs';
+  if(r.closed===true)o.closed=true;if(r.renewed===true)o.renewed=true;if(r.remind===false)o.remind=false;return valid(o)?o:null;
+}
+$('#imp').onclick=()=>$('#file').click();
+$('#file').onchange=e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  const isJ=/\.json$/i.test(f.name),rd=new FileReader();
+  rd.onload=()=>{try{
+    let rows;
+    if(isJ){const j=JSON.parse(rd.result);rows=Array.isArray(j)?j:(j.fds||[])}
+    else{const wb=XLSX.read(rd.result,{type:'array'});rows=XLSX.utils.sheet_to_json(wb.Sheets['FDs']||wb.Sheets[wb.SheetNames[0]],{defval:''})}
+    const key=o=>[o.bank,o.P,o.r,o.months,o.start].join('|'),have=new Set(fds.map(key));
+    const ok=rows.map(norm).filter(Boolean);let add=0,dup=0;
+    ok.forEach((o,i)=>{if(have.has(key(o))){dup++;return}have.add(key(o));o.id=Date.now()+i;fds.push(o);add++});
+    persist();render();
+    msg('Imported '+add+' of '+rows.length+' rows'+(dup?', skipped '+dup+' duplicate(s)':'')+(rows.length-ok.length?', '+(rows.length-ok.length)+' invalid row(s) ignored':'')+'.');
+  }catch(err){msg('Could not read that file. Use a JSON or Excel file exported from this app.')}};
+  isJ?rd.readAsText(f):rd.readAsArrayBuffer(f);
+};
+$('#clr').onclick=e=>{const b=e.target;
+  if(b.dataset.sure){fds=[];persist();render();b.dataset.sure='';b.textContent='Clear all';msg('All records cleared.')}
+  else{b.dataset.sure=1;b.textContent='Tap again to confirm';setTimeout(()=>{b.dataset.sure='';b.textContent='Clear all'},4000)}};
+/* ---------- Reminders, insights, PDF, Nepali ---------- */
+function render(){renderF();render0();const Ls=$('#list');if(fds.length&&!Ls.innerHTML.trim())Ls.innerHTML='<div class="card empty"><span>No matching deposits.</span></div>';renderBk();renderAlerts();renderRem();renderIns();applyLang()}
+function preview(e){preview0(e);applyLang()}
+const FYk=d=>{const b=ad2bs(iso(d)),y=b?(b.m>=4?b.y:b.y-1):d.getFullYear();return y+'/'+String((y+1)%100).padStart(2,'0')};
+const K=v=>v>=1e7?(v/1e7).toFixed(1)+'Cr':v>=1e5?(v/1e5).toFixed(1)+'L':v>=1e3?Math.round(v/1e3)+'k':Math.round(v)+'';
+const NF=n=>Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const day0=()=>{const t=new Date();t.setHours(0,0,0,0);return t};
+function fyData(){const m={};fds.forEach(o=>calc(o).rows.forEach(x=>{const k=FYk(x.d),a=m[k]||(m[k]={k,g:0,t:0,n:0});a.g+=x.int;a.t+=x.t;a.n+=x.net}));return Object.values(m).sort((a,b)=>a.k<b.k?-1:1)}
+function events(days){const t0=day0(),ev=[];fds.forEach(o=>{if(o.closed)return;const c=calc(o);c.rows.forEach((x,i)=>{const last=i===c.rows.length-1,dl=Math.round((x.d-t0)/864e5);if(dl>=0&&dl<=days)ev.push({o,d:x.d,dl,last,amt:x.net+(last?o.P:0)})})});return ev.sort((a,b)=>a.d-b.d)}
+/* reminders */
+let REM=30;try{REM=+localStorage.getItem('fd-rem')||30}catch(e){}
+function renderRem(){
+  if(!fds.length){$('#rem').innerHTML='';return}
+  const ev=events(REM),ymd=(d,a)=>iso(new Date(d.getFullYear(),d.getMonth(),d.getDate()+a)).replace(/-/g,'');
+  $('#rem').innerHTML=`<div class="card"><div class="row"><b>⏰ <span>Upcoming</span></b><span class="note" style="margin:0"><select id="remSel" style="width:auto;padding:4px 8px">${[7,15,30,60,90].map(n=>`<option value="${n}"${n===REM?' selected':''}>${n}</option>`).join('')}</select> <span>days</span></span></div>`+(ev.length?ev.map(e=>`<div class="row ev"><div><b>${esc(e.o.bank)}</b><div class="sub"><span>${e.last?'Matures · principal + interest':'Interest payout'}</span> · ${dstr(e.d)}</div></div><div style="text-align:right"><b>${NPR(e.amt)}</b><div class="sub">${e.dl?e.dl+' days left':'<span>Today</span>'} <a target="_blank" rel="noopener" href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('FD '+(e.last?'maturity':'payout')+': '+e.o.bank)}&dates=${ymd(e.d,0)}/${ymd(e.d,1)}">📅</a></div></div></div>`).join(''):'<div class="sub" style="margin-top:8px"><span>Nothing due in this period.</span></div>')+'</div>';
+}
+$('#rem').addEventListener('change',e=>{if(e.target.id==='remSel'){REM=+e.target.value;try{localStorage.setItem('fd-rem',REM)}catch(x){}renderRem();applyLang()}});
+/* insights */
+function renderIns(){
+  if(!fds.length){$('#insights').innerHTML='<div class="card empty"><span>Add an FD to see insights.</span></div>';return}
+  const bank={};let tp=0;fds.forEach(o=>{if(o.closed||o.renewed)return;bank[o.bank]=(bank[o.bank]||0)+o.P;tp+=o.P});
+  const sb=ad2bs(iso(day0())),bk=[],t0=day0();
+  if(sb)for(let i=0;i<12;i++){const b=addBSM({y:sb.y,m:sb.m,d:1},i);if(b)bk.push({y:b.y,m:b.m,v:0})}
+  fds.forEach(o=>{if(o.closed)return;const c=calc(o);c.rows.forEach((x,i)=>{if(x.d<t0)return;const b=ad2bs(iso(x.d)),z=b&&bk.find(q=>q.y===b.y&&q.m===b.m);if(z)z.v+=x.net+(i===c.rows.length-1?o.P:0)})});
+  const mx=Math.max(1,...bk.map(z=>z.v));
+  $('#insights').innerHTML=`<div class="card"><b>Fiscal-year interest &amp; TDS</b><div class="note">Fiscal year: Shrawan 1 to Ashadh end of the next year. Interest counts in the year it is paid (quarter-end).</div><div class="tw"><table style="min-width:320px"><tr><th>Fiscal year</th><th>Gross</th><th>TDS</th><th>Net</th></tr>${fyData().map(a=>`<tr><td>${a.k}</td><td>${NPR(a.g)}</td><td>${NPR(a.t)}</td><td><b>${NPR(a.n)}</b></td></tr>`).join('')}</table></div></div>
+  <div class="card"><b>Deposits by bank</b>${Object.entries(bank).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="hb"><div class="row"><span>${esc(k)}</span><b>${NPR(v)} · ${(v/tp*100).toFixed(0)}%</b></div><div class="bar"><i style="width:${v/tp*100}%"></i></div></div>`).join('')}</div>
+  <div class="card"><div class="row"><b>Cash-flow chart</b><div class="chips" style="margin:0"><span class="chip ${CFM==='m'?'on':''}" data-cf="m">Monthly</span><span class="chip ${CFM==='q'?'on':''}" data-cf="q">Quarterly</span></div></div><canvas id="cf" style="width:100%;height:200px;margin-top:10px"></canvas><div class="note">Interest payouts plus principal on maturity, by BS month or bank quarter.</div></div>
+  <div class="card"><b>Cash inflow · next 12 BS months</b><div class="cols">${bk.map(z=>`<div class="col">${z.v?K(z.v):''}<i style="height:${z.v/mx*100*.75}%"></i>${BSN[z.m-1].slice(0,3)}</div>`).join('')}</div><div class="note">Interest payouts plus principal on maturity.</div></div>`;drawCF();
+}
+/* PDF */
+$('#pdf').onclick=async()=>{
+  if(!fds.length)return msg('No records to export.');
+  const J=window.jspdf&&window.jspdf.jsPDF;if(!J)return msg('PDF library did not load.');
+  const d=new J({unit:'mm',format:'a4'}),T=day0(),bt=x=>{const b=ad2bs(iso(x));return b?b.d+' '+BSN[b.m-1]+' '+b.y:fmt(x)};
+  let y=16;const tx=(s,x,z,b,al)=>{d.setFont('helvetica',b?'bold':'normal');d.setFontSize(z);d.text(String(s),x,y,al?{align:al}:undefined)},nl=h=>{y+=h;if(y>280){d.addPage();y=16}};
+  const cs=fds.map(o=>({o,c:calc(o)})),P=cs.reduce((a,z)=>a+z.o.P,0),N=cs.reduce((a,z)=>a+z.c.net,0);
+  tx('Fixed Deposit Report',10,18,1);nl(7);tx('Generated '+bt(T)+' BS  |  '+fmt(T)+' AD  |  Amounts in Rs',10,9);nl(9);
+  tx('Total principal: '+NF(P),10,11,1);nl(6);tx('Net interest (after TDS): '+NF(N)+'    Total at maturity: '+NF(P+N),10,11,1);nl(10);
+  tx('Deposits',10,12,1);nl(6);
+  tx('Bank',10,9,1);tx('Principal',80,9,1,'right');tx('Rate',92,9,1,'right');tx('Matures (BS)',96,9,1);tx('Net interest',152,9,1,'right');tx('Total',200,9,1,'right');nl(2);d.line(10,y,200,y);nl(5);
+  cs.forEach(z=>{tx(z.o.bank.slice(0,34),10,9);tx(NF(z.o.P),80,9,0,'right');tx(z.o.r+'%',92,9,0,'right');tx(bt(z.c.end),96,9);tx(NF(z.c.net),152,9,0,'right');tx(NF(z.c.total),200,9,0,'right');nl(5.5)});
+  nl(6);tx('Fiscal-year summary (Shrawan-Ashadh)',10,12,1);nl(6);
+  tx('Fiscal year',10,9,1);tx('Gross interest',90,9,1,'right');tx('TDS',130,9,1,'right');tx('Net interest',170,9,1,'right');nl(2);d.line(10,y,200,y);nl(5);
+  fyData().forEach(a=>{tx(a.k,10,9);tx(NF(a.g),90,9,0,'right');tx(NF(a.t),130,9,0,'right');tx(NF(a.n),170,9,0,'right');nl(5.5)});
+  const ev=events(90);if(ev.length){nl(6);tx('Upcoming in the next 90 days',10,12,1);nl(6);ev.forEach(e=>{tx(bt(e.d),10,9);tx(e.o.bank.slice(0,30),50,9);tx(e.last?'Maturity':'Interest payout',110,9);tx(NF(e.amt),200,9,0,'right');nl(5.5)})}
+  await saveFile('fd-report-'+iso(T)+'.pdf',d.output('arraybuffer'));
+};
+/* Nepali */
+const EX={'Matured on':'परिपक्व भएको','renew or cancel?':'नवीकरण वा रद्द?','Matures in':'परिपक्वता हुन बाँकी','✖ Cancel FD':'✖ FD रद्द','✖ Cancel':'✖ रद्द','↩ Reopen':'↩ पुन: खोल्नुहोस्','Closed':'बन्द','📤 Share':'📤 सेयर','📤 Share summary':'📤 सारांश सेयर','Share summary':'सारांश सेयर','Action needed today':'आज कारबाही आवश्यक','Remind me before maturity (30 / 15 / 10 days)':'परिपक्वता अघि सम्झाउनुहोस् (30 / 15 / 10 दिन)','Import official calendar':'आधिकारिक पात्रो आयात','Import':'आयात','Reset all years':'सबै वर्ष रिसेट','📋 Copy':'📋 कपी','Settings':'सेटिङ','⚡ Quick entry':'⚡ छिटो प्रविष्टि','Last entry:':'पछिल्लो प्रविष्टि:','↻ Use & edit':'↻ प्रयोग र सम्पादन','📋 Duplicate':'📋 प्रतिलिपि','Save':'सुरक्षित','Reset':'रिसेट','Saved banks':'सुरक्षित बैंकहरू','edited':'सम्पादित','Bank quarter-end':'बैंक त्रैमासिक अन्त','Bank quarter-end: accrued interest is paid on the last day of Ashadh, Ashwin, Poush and Chaitra, whatever the opening date.':'बैंक त्रैमासिक अन्त: खोलेको मिति जेसुकै भए पनि आषाढ, आश्विन, पौष र चैत्र मसान्तमा आर्जित ब्याज भुक्तानी हुन्छ।','Fiscal year: Shrawan 1 to Ashadh end of the next year. Interest counts in the year it is paid (quarter-end).':'आर्थिक वर्ष: श्रावण १ देखि अर्को वर्षको आषाढ मसान्तसम्म। ब्याज भुक्तानी हुने वर्षमा गनिन्छ।','Tag / category':'ट्याग / वर्ग','Cash-flow chart':'नगद प्रवाह चार्ट','Interest payouts plus principal on maturity, by BS month or bank quarter.':'बि.सं. महिना वा बैंक त्रैमासिक अनुसार ब्याज र परिपक्वतामा सावा।','Renewed':'नवीकरण भयो','🔁 Renew':'🔁 नवीकरण','🔁 Renew principal':'🔁 सावा नवीकरण','🔁 Renew + interest':'🔁 सावा + ब्याज नवीकरण','⭐ Templates':'⭐ टेम्पलेट','⭐ Save as template':'⭐ टेम्पलेटमा सुरक्षित','✓ Saved':'✓ सुरक्षित','＋ Profile':'＋ प्रोफाइल','No matching deposits.':'मेल खाने निक्षेप फेला परेन।','Interest rate':'ब्याज दर','Term':'अवधि','Maturity date':'परिपक्वता मिति','Payout':'भुक्तानी','Basis':'आधार','Export JSON':'JSON निर्यात','💾 Data is stored only in this browser. Export a JSON backup after each session.':'💾 डेटा यही ब्राउजरमा मात्र छ। प्रत्येक सत्रपछि JSON ब्याकअप निर्यात गर्नुहोस्।','Fixed Deposit Report':'मुद्दती निक्षेप प्रतिवेदन','Generated':'तयार मिति','Amounts in Rs':'रकम रुपैँयामा','Total principal':'कुल सावा','Deposits':'निक्षेपहरू','Bank':'बैंक','Rate':'दर','Matures (BS)':'परिपक्वता (बि.सं.)','Total':'जम्मा','Fiscal-year summary (Shrawan-Ashadh)':'आर्थिक वर्ष सारांश (श्रावण–आषाढ)','Upcoming in the next 90 days':'आगामी ९० दिनभित्र','Maturity':'परिपक्वता','My FDs':'मेरा FD','Insights':'विश्लेषण','Add / Calculate':'थप / गणना','Total principal invested':'कुल लगानी (सावा)','Net interest (after TDS)':'खुद ब्याज (कर पछि)','Total at maturity':'परिपक्वतामा जम्मा','Active deposits':'सक्रिय निक्षेप','⬇ Export JSON':'⬇ JSON निर्यात','⬇ Export Excel':'⬇ Excel निर्यात','⬆ Import JSON / Excel':'⬆ JSON / Excel आयात','📄 PDF report':'📄 PDF रिपोर्ट','Clear all':'सबै हटाउनुहोस्','Upcoming':'आउँदो','days':'दिन','Today':'आज','Interest payout':'ब्याज भुक्तानी','Matures · principal + interest':'परिपक्व · सावा + ब्याज','Nothing due in this period.':'यस अवधिमा कुनै रकम आउँदैन।','Next payout:':'अर्को भुक्तानी:','from':'बाट','on':'मिति','No fixed deposits yet.':'अझै कुनै मुद्दती निक्षेप छैन।','Tap':'ट्याप गर्नुहोस्','to record your first one.':'र पहिलो थप्नुहोस्।','Add an FD to see insights.':'विश्लेषण हेर्न FD थप्नुहोस्।','Fiscal-year interest & TDS':'आर्थिक वर्षको ब्याज र कर','Counted in the fiscal year (Shrawan–Ashadh) in which each payout falls.':'प्रत्येक भुक्तानी पर्ने आर्थिक वर्ष (श्रावण–आषाढ) अनुसार।','Fiscal year':'आर्थिक वर्ष','Gross':'कुल','Deposits by bank':'बैंक अनुसार निक्षेप','Cash inflow · next 12 BS months':'आगामी १२ बि.सं. महिनाको नगद आगमन','Interest payouts plus principal on maturity.':'ब्याज भुक्तानी र परिपक्वतामा सावा।','Bank / Institution':'बैंक / संस्था','Label / Holder':'नाम / धनी','Principal (रू)':'सावा (रू)','Interest rate (% p.a.)':'ब्याज दर (% वार्षिक)','Term (BS months)':'अवधि (बि.सं. महिना)','Unit':'एकाइ','Months':'महिना','Years':'वर्ष','Start date':'सुरु मिति','TDS on interest (%)':'ब्याजमा कर कट्टी (%)','Maturity date (calculated)':'परिपक्वता मिति (गणना)','Interest basis':'ब्याज आधार','BS months · actual days ÷ 365':'बि.सं. महिना · वास्तविक दिन ÷ 365','Simple · months ÷ 12':'साधारण · महिना ÷ 12','Interest handling':'ब्याज व्यवस्था','Pay out interest':'ब्याज भुक्तानी','Reinvest (compound)':'पुनर्लगानी (चक्रीय)','Frequency':'अन्तराल','Monthly':'मासिक','Quarterly':'त्रैमासिक','Half-yearly':'अर्धवार्षिक','Annually':'वार्षिक','At maturity':'परिपक्वतामा','Custom':'अनुकूल','Custom: every N months':'अनुकूल: प्रत्येक N महिना','Gross interest':'कुल ब्याज','TDS deducted':'कर कट्टी','Net interest':'खुद ब्याज','Effective yield p.a.':'प्रभावकारी प्रतिफल वार्षिक','Save this FD':'यो FD सुरक्षित गर्नुहोस्','Update FD':'FD अद्यावधिक गर्नुहोस्','Cancel edit':'सम्पादन रद्द','Date':'मिति','Days':'दिन','Interest':'ब्याज','TDS':'कर','Net':'खुद','Balance':'मौज्दात','✏️ Edit':'✏️ सम्पादन','Schedule':'तालिका','Delete':'मेट्नुहोस्','Principal':'सावा','BS month':'बि.सं. महिना','Interest accrued':'आर्जित ब्याज','Month-wise accrual · BS calendar':'महिनागत ब्याज · बि.सं. पात्रो','Matured':'परिपक्व'};
+const PH=[['Month lengths for BS','बि.सं. महिनाको दिन'],['bank quarter-end','बैंक त्रैमासिक अन्त'],['monthly','मासिक'],['quarterly','त्रैमासिक'],['half-yearly','अर्धवार्षिक'],['annually','वार्षिक'],['at maturity','परिपक्वतामा'],['Compounded','चक्रीय'],['Paid out','भुक्तानी'],['Half-yearly','अर्धवार्षिक'],['Quarterly','त्रैमासिक'],['Monthly','मासिक'],['Annually','वार्षिक'],['At maturity','परिपक्वतामा'],['BS days ÷365','बि.सं. दिन'],[' days left',' दिन बाँकी'],[' mo ·',' महिना ·'],['Every ','प्रत्येक '],['Matured','परिपक्व'],['✏️ Editing:','✏️ सम्पादन:'],...BSN.map((n,i)=>[n,BSP[i]]),...['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((n,i)=>[n,['जनवरी','फेब्रुअरी','मार्च','अप्रिल','मे','जुन','जुलाई','अगस्ट','सेप्टेम्बर','अक्टोबर','नोभेम्बर','डिसेम्बर'][i]])];
+let LANG='en';try{LANG=localStorage.getItem('fd-lang')||'en'}catch(e){}
+const OR=new WeakMap(),dg=s=>s.replace(/\d/g,c=>'०१२३४५६७८९'[c]);
+function tr(s){const t=s.trim(),r=EX[t];if(r!==undefined)return s.replace(t,r);for(const[a,b]of PH)if(s.includes(a))s=s.split(a).join(b);return s.replace(/(\S+) · \1/g,'$1')}
+function applyLang(){
+  const ne=LANG==='ne',w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
+  document.documentElement.lang=ne?'ne':'en';
+  while(n=w.nextNode()){
+    const pn=n.parentNode.nodeName;if(pn==='SCRIPT'||pn==='STYLE')continue;
+    let r=OR.get(n);if(!r||(n.nodeValue!==r.x&&n.nodeValue!==r.o)){r={o:n.nodeValue,x:n.nodeValue};OR.set(n,r)}
+    r.x=ne?dg(tr(r.o)):r.o;if(n.nodeValue!==r.x)n.nodeValue=r.x;
+  }
+}
+$$('.lg button').forEach(b=>{b.classList.toggle('on',b.dataset.lg===LANG);b.onclick=()=>{LANG=b.dataset.lg;try{localStorage.setItem('fd-lang',LANG)}catch(e){}$$('.lg button').forEach(x=>x.classList.toggle('on',x===b));render();preview()}});
+/* ---------- v3: tags, detail, rollover, templates, profiles, canvas chart, backup, Nepali PDF ---------- */
+let FT='',FQ='',CFM='m',renewFrom=null,TPL=[];
+try{TPL=JSON.parse(localStorage.getItem('fd-tpl')||'[]')}catch(e){}
+const saveTpl=()=>{try{localStorage.setItem('fd-tpl',JSON.stringify(TPL))}catch(e){}};
+const saveProfs=()=>{try{localStorage.setItem('fd-profs',JSON.stringify(PROFS));localStorage.setItem('fd-pid',PID)}catch(e){}};
+const fmatch=o=>(!FT||o.tag===FT)&&(!FQ||[o.bank,o.holder,o.tag,o.P,o.r].join(' ').toLowerCase().includes(FQ));
+function renderF(){
+  const tags=[...new Set(fds.map(o=>o.tag).filter(Boolean))];if(FT&&!tags.includes(FT))FT='';
+  $('#chips').innerHTML=tags.length?['',...tags].map(t=>`<span class="chip${t===FT?' on':''}" data-ft="${esc(t)}">${t?esc(t):'All'}</span>`).join(''):'';
+  $('#tags').innerHTML=[...new Set([...tags,'Retirement','Education','Emergency','Business','Family'])].map(t=>`<option value="${esc(t)}">`).join('');
+  $('#fbar').classList.toggle('hide',!fds.length);
+}
+$('#q').oninput=e=>{FQ=e.target.value.trim().toLowerCase();render()};
+$('#chips').addEventListener('click',e=>{const c=e.target.closest('[data-ft]');if(c){FT=c.dataset.ft;render()}});
+/* backup nudge */
+function renderBk(){let d='0';try{d=localStorage.getItem('fd-dirty')||'0'}catch(e){}
+  $('#bk').innerHTML=fds.length&&d==='1'?'<div class="editing"><span>💾 Data is stored only in this browser. Export a JSON backup after each session.</span> <button class="btn ghost" id="bkNow" style="width:auto;padding:4px 10px;margin-left:6px">Export JSON</button></div>':''}
+$('#bk').addEventListener('click',e=>{if(e.target.id==='bkNow')$('#exJ').click()});
+/* profiles */
+function renderProfs(){$('#pSel').innerHTML=PROFS.map(p=>`<option value="${p.id}"${p.id===PID?' selected':''}>${esc(p.name)}</option>`).join('');$('#pDel').classList.toggle('hide',PROFS.length<2)}
+function switchP(id){PID=id;saveProfs();try{fds=JSON.parse(localStorage.getItem(kOf(PID))||'[]')}catch(e){fds=[]}setEdit(null);FT='';FQ='';$('#q').value='';renderProfs();render()}
+$('#pSel').onchange=e=>switchP(e.target.value);
+$('#pAdd').onclick=()=>{const i=$('#pName');i.classList.toggle('hide');if(!i.classList.contains('hide'))i.focus()};
+$('#pName').onkeydown=e=>{if(e.key!=='Enter')return;const n=e.target.value.trim();if(!n)return;const id='p'+Date.now();PROFS.push({id,name:n});e.target.value='';e.target.classList.add('hide');switchP(id)};
+$('#pDel').onclick=e=>{const b=e.target;if(!b.dataset.sure){b.dataset.sure=1;b.textContent='Tap again';setTimeout(()=>{b.dataset.sure='';b.textContent='Delete'},4000);return}
+  b.dataset.sure='';b.textContent='Delete';try{localStorage.removeItem(kOf(PID))}catch(x){}PROFS=PROFS.filter(p=>p.id!==PID);switchP(PROFS[0].id)};
+/* detail / receipt */
+const closeModal=()=>{$('#modal').classList.add('hide');$('#modal').innerHTML=''};
+function editFD(id){const o=fds.find(x=>String(x.id)===String(id));if(o){setForm(o);setEdit(o.id);$('.tabs button[data-t=add]').click();window.scrollTo(0,0)}}
+function openDetail(id){
+  const o=fds.find(x=>String(x.id)===String(id));if(!o)return;
+  const c=calc(o),done=c.end<=day0(),fq=o.freq==='q'?'Bank quarter-end':o.freq==='0'?'At maturity':o.freq==='c'?'Every '+o.f+' months':({1:'Monthly',3:'Quarterly',6:'Half-yearly',12:'Annually'})[o.f];
+  const R=[['Principal',NPR(o.P)],['Interest rate',o.r+'%'],['Term',o.months+' months'],['Start date',dstr(pd(o.start))],['Maturity date',dstr(c.end)],['Payout',fq+' · '+(o.mode==='compound'?'Compounded':'Paid out')],['Basis',o.basis==='bs'?'BS days ÷365':'Simple months ÷12'],['Gross interest',NPR(c.gross)],['TDS deducted',NPR(c.tax)+' ('+o.tds+'%)'],['Net interest',NPR(c.net)],['Total at maturity',NPR(c.total)]];
+  $('#modal').innerHTML=`<div class="sheet"><div class="row"><div><h2 style="margin:0;font-size:19px">${esc(o.bank)}${o.tag?` <span class="tag">${esc(o.tag)}</span>`:''}</h2><div class="sub">${esc(o.holder||'')}</div></div><button class="btn ghost" id="mx" style="width:auto;padding:6px 12px">✕</button></div><div class="rcp">${R.map(([k,v])=>`<div class="rr"><span>${k}</span><b>${v}</b></div>`).join('')}</div><div class="tw">${schedHTML(c,o.mode==='compound')}</div><div class="acts" style="margin-top:14px"><button class="btn ghost" data-ed="${o.id}">✏️ Edit</button><button class="btn ghost" data-dup="${o.id}">📋 Duplicate</button><button class="btn ghost" data-sh="${o.id}">📤 Share</button>${o.closed?`<button class="btn ghost" data-ro="${o.id}">↩ Reopen</button>`:''}${done&&!o.renewed&&!o.closed?`<button class="btn ghost" data-cl="${o.id}">✖ Cancel FD</button><button class="btn ghost" data-rn="${o.id}">🔁 Renew principal</button><button class="btn ghost" data-rw="${o.id}">🔁 Renew + interest</button>`:''}<button class="btn ghost" data-dl="${o.id}">Delete</button></div></div>`;
+  $('#modal').classList.remove('hide');applyLang();
+}
+$('#list').addEventListener('click',e=>{
+  const cl=e.target.closest('[data-cl]');if(cl){cancelFD(cl.dataset.cl,cl);return}
+  const rn=e.target.closest('[data-rn]');if(rn){startRenew(rn.dataset.rn,false);return}
+  if(e.target.closest('button,a'))return;
+  const c=e.target.closest('[data-open]');if(c)openDetail(c.dataset.open)});
+$('#modal').addEventListener('click',e=>{
+  if(e.target.id==='modal'||e.target.id==='mx'){closeModal();return}
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.ed){const id=b.dataset.ed;closeModal();editFD(id)}
+  else if(b.dataset.dup)dupFD(b.dataset.dup);
+  else if(b.dataset.sh){const o=fds.find(x=>String(x.id)===b.dataset.sh);if(o)shareSheet(summaryText(o))}
+  else if(b.dataset.cl)cancelFD(b.dataset.cl,b);
+  else if(b.dataset.ro){const o=fds.find(x=>String(x.id)===b.dataset.ro);if(o){delete o.closed;persist();closeModal();render()}}
+  else if(b.dataset.shn){navigator.share({text:$('#shT').value}).catch(()=>{})}
+  else if(b.dataset.cp){const ta=$('#shT'),ok=()=>{$('#shM').textContent='✓ Copied'},no=()=>{$('#shM').textContent='Select the text above and copy it manually.'};ta.select();
+    try{(navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(ta.value):Promise.reject()).then(ok,()=>{try{document.execCommand('copy')?ok():no()}catch(x){no()}})}catch(x){no()}}
+  else if(b.dataset.rn)startRenew(b.dataset.rn,false);
+  else if(b.dataset.rw)startRenew(b.dataset.rw,true);
+  else if(b.dataset.dl){if(b.dataset.sure){fds=fds.filter(x=>String(x.id)!==b.dataset.dl);persist();closeModal();render()}else{b.dataset.sure=1;b.textContent='Tap again to confirm'}}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+/* rollover */
+function startRenew(id,wi){
+  const o=fds.find(x=>String(x.id)===String(id));if(!o)return;const c=calc(o);
+  closeModal();setForm({...o,P:Math.round((o.P+(wi?c.net:0))*100)/100,start:iso(c.end)});setEdit(null);renewFrom=o.id;
+  $('#eb').textContent='🔁 Renewing: '+o.bank+(wi?' (principal + net interest)':'');$('#eb').classList.remove('hide');$('#save').textContent='Save renewal';$('#cancel').classList.remove('hide');
+  $('.tabs button[data-t=add]').click();window.scrollTo(0,0);
+}
+/* templates */
+function renderTpl(){$('#tplBar').innerHTML=TPL.length?`<div class="card"><b>⭐ Templates</b><div class="chips">${TPL.map((t,i)=>`<span class="chip" data-tp="${i}">${esc(t.name)} <span data-td="${i}">✕</span></span>`).join('')}</div></div>`:''}
+$('#tplBar').addEventListener('click',e=>{
+  const d=e.target.closest('[data-td]');if(d){TPL.splice(+d.dataset.td,1);saveTpl();renderTpl();applyLang();return}
+  const c=e.target.closest('[data-tp]');if(c){setForm({...TPL[+c.dataset.tp],start:iso(new Date())});setEdit(null)}});
+$('#tplSave').onclick=e=>{const b=e.target,o=readForm();if(!valid(o))return;
+  TPL.push({name:o.bank+' · '+K(o.P)+' · '+o.r+'%'+(o.tag?' · '+o.tag:''),bank:o.bank,holder:o.holder,tag:o.tag||'',P:o.P,r:o.r,months:o.months,tds:o.tds,mode:o.mode,basis:o.basis,freq:o.freq,f:o.f});
+  saveTpl();renderTpl();applyLang();b.textContent='✓ Saved';setTimeout(()=>{b.textContent='⭐ Save as template';applyLang()},1500)};
+/* canvas cash-flow chart */
+function inflowEv(){const t0=day0(),ev=[];fds.forEach(o=>{if(o.closed)return;const c=calc(o);c.rows.forEach((x,i)=>{if(x.d<t0)return;const b=ad2bs(iso(x.d));if(b)ev.push({b,v:x.net+(i===c.rows.length-1?o.P:0)})})});return ev}
+function drawCF(){
+  const cv=$('#cf');if(!cv||!cv.clientWidth)return;
+  const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=200;cv.width=w*dpr;cv.height=h*dpr;const g=cv.getContext('2d');g.scale(dpr,dpr);
+  const cs=getComputedStyle(document.documentElement),V=n=>cs.getPropertyValue(n).trim(),ne=LANG==='ne',L=s=>ne?dg(String(s)):String(s);
+  const sb=ad2bs(iso(day0()));if(!sb)return;
+  const QN=['Ashadh','Ashwin','Poush','Chaitra'],QP=[BSP[2],BSP[5],BSP[8],BSP[11]],B=[];
+  if(CFM==='m'){for(let i=0;i<12;i++){const b=addBSM({y:sb.y,m:sb.m,d:1},i);if(b)B.push({key:b.y*12+b.m,l:ne?BSP[b.m-1]:BSN[b.m-1].slice(0,3),v:0})}}
+  else{const q0=sb.y*4+Math.floor((sb.m-1)/3);for(let i=0;i<8;i++){const k=q0+i;B.push({key:k,l:(ne?QP[k%4]:QN[k%4].slice(0,3))+' '+L(String(Math.floor(k/4)).slice(2)),v:0})}}
+  inflowEv().forEach(e=>{const k=CFM==='m'?e.b.y*12+e.b.m:e.b.y*4+Math.floor((e.b.m-1)/3),z=B.find(q=>q.key===k);if(z)z.v+=e.v});
+  const mx=Math.max(1,...B.map(z=>z.v)),bw=(w-16)/B.length,base=h-22,top=18;
+  g.strokeStyle=V('--line')||'#ccc';g.beginPath();g.moveTo(8,base+.5);g.lineTo(w-8,base+.5);g.stroke();
+  g.textAlign='center';g.font='10px system-ui,"Noto Sans Devanagari",sans-serif';
+  B.forEach((z,i)=>{const x=8+i*bw+bw*.15,bd=bw*.7,bh=z.v/mx*(base-top);
+    if(z.v){const gr=g.createLinearGradient(0,base-bh,0,base);gr.addColorStop(0,V('--acc')||'#c8102e');gr.addColorStop(1,V('--acc2')||'#003893');g.fillStyle=gr;g.fillRect(x,base-bh,bd,bh);g.fillStyle=V('--mut')||'#888';g.fillText(L(K(z.v)),x+bd/2,base-bh-4)}
+    g.fillStyle=V('--mut')||'#888';g.fillText(z.l,x+bd/2,h-6)});
+}
+window.addEventListener('resize',drawCF);
+$('#insights').addEventListener('click',e=>{const c=e.target.closest('[data-cf]');if(c){CFM=c.dataset.cf;renderIns();applyLang()}});
+/* backup: all profiles + templates */
+$('#exJ').onclick=()=>{
+  if(!fds.length&&PROFS.length<2)return msg('No records to export.');
+  const profiles=PROFS.map(p=>{let f=[];if(p.id===PID)f=fds;else{try{f=JSON.parse(localStorage.getItem(kOf(p.id))||'[]')}catch(e){}}return{id:p.id,name:p.name,fds:f}});
+  saveFile('fd-backup-'+iso(new Date())+'.json',JSON.stringify({app:'fd-manager-nepal',version:2,exported:iso(new Date()),profiles,templates:TPL},null,2));
+};
+$('#file').onchange=e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  const isJ=/\.json$/i.test(f.name),rd=new FileReader(),key=o=>[o.bank,o.P,o.r,o.months,o.start].join('|');
+  const merge=(arr,rows)=>{const have=new Set(arr.map(key));let a=0,dd=0,bad=0;rows.forEach((r,i)=>{const o=norm(r);if(!o){bad++;return}if(have.has(key(o))){dd++;return}have.add(key(o));o.id=Date.now()+i+Math.floor(Math.random()*1e4);arr.push(o);a++});return{a,dd,bad}};
+  rd.onload=()=>{try{
+    let T={a:0,dd:0,bad:0};
+    if(isJ){const j=JSON.parse(rd.result);
+      if(j.profiles){j.profiles.forEach(p=>{let pr=PROFS.find(x=>x.name===p.name);if(!pr){pr={id:'p'+Date.now()+Math.floor(Math.random()*1e3),name:p.name||'Imported'};PROFS.push(pr)}
+        let arr=fds;if(pr.id!==PID){try{arr=JSON.parse(localStorage.getItem(kOf(pr.id))||'[]')}catch(x){arr=[]}}
+        const r=merge(arr,p.fds||[]);T.a+=r.a;T.dd+=r.dd;T.bad+=r.bad;if(pr.id!==PID)localStorage.setItem(kOf(pr.id),JSON.stringify(arr))});
+        (j.templates||[]).forEach(t=>{if(t&&t.name&&!TPL.some(x=>x.name===t.name))TPL.push(t)});saveTpl();saveProfs()}
+      else T=merge(fds,Array.isArray(j)?j:(j.fds||[]))}
+    else{const wb=XLSX.read(rd.result,{type:'array'});T=merge(fds,XLSX.utils.sheet_to_json(wb.Sheets['FDs']||wb.Sheets[wb.SheetNames[0]],{defval:''}))}
+    persist();renderProfs();renderTpl();render();
+    msg('Imported '+T.a+' record(s)'+(T.dd?', skipped '+T.dd+' duplicate(s)':'')+(T.bad?', '+T.bad+' invalid row(s) ignored':'')+'.');
+  }catch(err){msg('Could not read that file. Use a JSON or Excel file exported from this app.')}};
+  isJ?rd.readAsText(f):rd.readAsArrayBuffer(f);
+};
+/* PDF with Nepali text: rendered through canvas so no font embedding is needed */
+$('#pdf').onclick=async()=>{
+  if(!fds.length)return msg('No records to export.');
+  const J=window.jspdf&&window.jspdf.jsPDF;if(!J)return msg('PDF library did not load.');
+  const ne=LANG==='ne',d=new J({unit:'mm',format:'a4'}),T=day0(),K6=6,L=s=>ne?dg(tr(s)):s,D=v=>ne?dg(String(v)):String(v),N2=n=>D(NF(n));
+  const bt=x=>{const b=ad2bs(iso(x));return b?D(b.d)+' '+(ne?BSP[b.m-1]:BSN[b.m-1])+' '+D(b.y):fmt(x)};
+  let cv,cx,y=16;
+  const open=()=>{if(!ne)return;cv=document.createElement('canvas');cv.width=210*K6;cv.height=297*K6;cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);cx.fillStyle='#111'};
+  const flush=()=>{if(ne)d.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',0,0,210,297)};
+  const tx=(s,x,z,b,al)=>{s=String(s);if(!ne){d.setFont('helvetica',b?'bold':'normal');d.setFontSize(z);d.text(s,x,y,al?{align:al}:undefined);return}cx.font=(b?'bold ':'')+Math.round(z*2.117)+'px "Noto Sans Devanagari",Mangal,system-ui,sans-serif';cx.textAlign=al||'left';cx.fillText(s,x*K6,y*K6)};
+  const ln=()=>{if(ne)cx.fillRect(10*K6,y*K6,190*K6,2);else d.line(10,y,200,y)};
+  const nl=h=>{y+=h;if(y>280){flush();d.addPage();open();y=16}};
+  open();
+  const cs=fds.map(o=>({o,c:calc(o)})),P=cs.reduce((a,z)=>a+z.o.P,0),Nn=cs.reduce((a,z)=>a+z.c.net,0),pn=PROFS.find(p=>p.id===PID).name;
+  tx(L('Fixed Deposit Report'),10,18,1);nl(7);
+  tx(pn+'  |  '+L('Generated')+': '+bt(T)+' BS  |  '+(ne?D(iso(T)):fmt(T))+' AD  |  '+L('Amounts in Rs'),10,9);nl(9);
+  tx(L('Total principal')+': '+N2(P),10,11,1);nl(6);
+  tx(L('Net interest (after TDS)')+': '+N2(Nn)+'    '+L('Total at maturity')+': '+N2(P+Nn),10,11,1);nl(10);
+  tx(L('Deposits'),10,12,1);nl(6);
+  tx(L('Bank'),10,9,1);tx(L('Principal'),80,9,1,'right');tx(L('Rate'),92,9,1,'right');tx(L('Matures (BS)'),96,9,1);tx(L('Net interest'),152,9,1,'right');tx(L('Total'),200,9,1,'right');nl(2);ln();nl(5);
+  cs.forEach(z=>{tx((z.o.bank+(z.o.tag?' ['+z.o.tag+']':'')).slice(0,34),10,9);tx(N2(z.o.P),80,9,0,'right');tx(D(z.o.r)+'%',92,9,0,'right');tx(bt(z.c.end),96,9);tx(N2(z.c.net),152,9,0,'right');tx(N2(z.c.total),200,9,0,'right');nl(5.5)});
+  nl(6);tx(L('Fiscal-year summary (Shrawan-Ashadh)'),10,12,1);nl(6);
+  tx(L('Fiscal year'),10,9,1);tx(L('Gross interest'),90,9,1,'right');tx(L('TDS'),130,9,1,'right');tx(L('Net interest'),170,9,1,'right');nl(2);ln();nl(5);
+  fyData().forEach(a=>{tx(D(a.k),10,9);tx(N2(a.g),90,9,0,'right');tx(N2(a.t),130,9,0,'right');tx(N2(a.n),170,9,0,'right');nl(5.5)});
+  const ev=events(90);if(ev.length){nl(6);tx(L('Upcoming in the next 90 days'),10,12,1);nl(6);ev.forEach(e=>{tx(bt(e.d),10,9);tx(e.o.bank.slice(0,30),50,9);tx(L(e.last?'Maturity':'Interest payout'),110,9);tx(N2(e.amt),200,9,0,'right');nl(5.5)})}
+  flush();
+  await saveFile('fd-report-'+iso(T)+(ne?'-ne':'')+'.pdf',d.output('arraybuffer'));
+};
+renderProfs();renderTpl();
+/* ---------- v4: month-length settings, bank memory, last entry ---------- */
+let BANKS=[],LAST=null,MLOK=0;
+try{BANKS=JSON.parse(localStorage.getItem('fd-banks')||'[]')}catch(e){}
+try{LAST=JSON.parse(localStorage.getItem('fd-last')||'null')}catch(e){}
+const saveBanks=()=>{try{localStorage.setItem('fd-banks',JSON.stringify(BANKS))}catch(e){}};
+function remember(o){
+  const n=(o.bank||'').trim();
+  if(n&&n!=='Fixed deposit'){BANKS=BANKS.filter(b=>b.n.toLowerCase()!==n.toLowerCase());BANKS.unshift({n,r:o.r,h:o.holder||'',t:o.tag||'',d:o.tds});BANKS=BANKS.slice(0,30);saveBanks()}
+  LAST={...o};delete LAST.id;delete LAST.renewed;try{localStorage.setItem('fd-last',JSON.stringify(LAST))}catch(e){}
+  renderQuick();
+}
+function renderQuick(){
+  $('#banks').innerHTML=BANKS.map(b=>`<option value="${esc(b.n)}">`).join('');
+  $('#quick').innerHTML=(LAST||BANKS.length)?`<div class="card"><b>⚡ Quick entry</b>${LAST?`<div class="row ev"><div class="sub"><span>Last entry:</span> <b>${esc(LAST.bank)}</b> · ${NPR(LAST.P)} · ${LAST.r}%</div><button class="btn ghost" id="useLast" style="width:auto;padding:6px 12px">↻ Use &amp; edit</button></div>`:''}${BANKS.length?`<div class="chips">${BANKS.slice(0,8).map((b,i)=>`<span class="chip" data-bk="${i}">${esc(b.n)} · ${b.r}%</span>`).join('')}</div>`:''}</div>`:'';
+}
+$('#quick').addEventListener('click',e=>{
+  if(e.target.id==='useLast'&&LAST){setForm({...LAST,start:iso(new Date())});setEdit(null);return}
+  const c=e.target.closest('[data-bk]');if(c){const b=BANKS[+c.dataset.bk];$('#bank').value=b.n;$('#r').value=b.r;$('#holder').value=b.h||'';$('#tag').value=b.t||'';$('#tds').value=b.d==null?5:b.d;preview()}});
+$('#bank').addEventListener('change',()=>{
+  if(editId!=null)return;const b=BANKS.find(x=>x.n.toLowerCase()===$('#bank').value.trim().toLowerCase());
+  if(b){$('#r').value=b.r;if(!$('#holder').value)$('#holder').value=b.h||'';if(!$('#tag').value)$('#tag').value=b.t||'';preview()}});
+function dupFD(id){const o=fds.find(x=>String(x.id)===String(id));if(!o)return;closeModal();setForm({...o,start:iso(new Date())});setEdit(null);$('.tabs button[data-t=add]').click();window.scrollTo(0,0)}
+/* month-length settings */
+function yearInfo(y){const a=bs2adISO(y,1,1),b=y+1<Y0+BSD.length?bs2adISO(y+1,1,1):null;return 'Total '+BSD[y-Y0].reduce((s,v)=>s+v,0)+' days · Baisakh 1 = '+(a?fmt(pd(a)):'–')+(b?' · next Baisakh 1 = '+fmt(pd(b)):'')}
+function renderSet(){
+  const cur=ad2bs(iso(day0())),cy=cur?cur.y:2083,ok=MLOK;MLOK=0;
+  $('#settings').innerHTML=`<div class="card"><b>Month lengths</b><div class="note">BS month lengths change every year. Correct the previous, current and next year here if the official patro differs from the built-in data. Keep each year’s total at its official length (365 or 366), otherwise later dates shift. Saved FDs keep their AD dates and every schedule is recalculated.</div></div>`
+  +[cy-1,cy,cy+1].filter(y=>y>=Y0&&y<Y0+BSD.length).map(y=>`<div class="card"><b>Month lengths for BS ${y}${BSOV[y]?' <span class="tag">edited</span>':''}</b><div class="row" style="margin-top:10px;gap:8px"><input id="ml${y}" value="${BSD[y-Y0].join(',')}" inputmode="numeric" style="flex:1;min-width:0"><button class="btn ghost" data-mls="${y}" style="width:auto;padding:10px 14px">Save</button><button class="btn ghost" data-mlr="${y}" style="width:auto;padding:10px 14px">Reset</button></div><div class="note" id="mn${y}"${ok===y?' style="color:var(--ok)"':''}>${ok===y?'✓ Saved. All schedules recalculated.':'12 comma-separated values (29–32), Baisakh to Chaitra. Edit if the official table differs from the built-in data.'}</div><div class="note" style="margin-top:2px">${yearInfo(y)}</div></div>`).join('')
+  +`<div class="card"><b>Import official calendar</b><div class="note">Paste the full BS month-length table, one year per line (for example <b>2083: 31,31,32,31,31,31,30,29,30,29,30,30</b>), or upload a .txt, .csv or .json file. Include every year from 2070 so dates stay aligned. This replaces the built-in lengths for the years found.</div><textarea id="calT" rows="5" placeholder="2082: 31,31,32,...&#10;2083: 31,31,32,..." style="width:100%;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--ink);font:13px ui-monospace,monospace"></textarea><div class="row" style="margin-top:8px;gap:8px"><input type="file" id="calF" accept=".txt,.csv,.json" style="flex:1;min-width:0;font-size:13px"><button class="btn ghost" data-calimp="1" style="width:auto;padding:10px 14px">Import</button><button class="btn ghost" data-calrst="1" style="width:auto;padding:10px 14px">Reset all years</button></div>${(()=>{const c=CALMSG;CALMSG='';return `<div class="note" id="calM"${c?' style="color:var(--ok)"':''}>${c}</div>`})()}</div>`
+  +`<div class="card"><b>Saved banks</b>${BANKS.length?`<div class="chips">${BANKS.map((b,i)=>`<span class="chip">${esc(b.n)} · ${b.r}% <span data-bd="${i}">✕</span></span>`).join('')}</div>`:''}<div class="note">Banks are remembered automatically when you save an FD, with the rate, holder, tag and TDS you used. They appear as quick-entry chips and bank suggestions.</div></div>`;
+}
+function applyMonths(y,v){
+  const keep=getStart();
+  if(v&&v.join()!==BSD0[y-Y0].join())BSOV[y]=v;else delete BSOV[y];
+  BSD[y-Y0]=v?v.slice():BSD0[y-Y0].slice();
+  try{localStorage.setItem('fd-bsov',JSON.stringify(BSOV))}catch(e){}
+  rebuildMS();if(keep)setBS(keep);MLOK=y;
+  render();preview();renderSet();applyLang();
+}
+$('#settings').addEventListener('click',e=>{
+  const s=e.target.closest('[data-mls]'),r=e.target.closest('[data-mlr]'),d=e.target.closest('[data-bd]');
+  if(d){BANKS.splice(+d.dataset.bd,1);saveBanks();renderSet();renderQuick();applyLang();return}
+  if(s){const y=+s.dataset.mls,v=$('#ml'+y).value.split(',').map(x=>parseInt(x.trim(),10));
+    if(v.length!==12||v.some(n=>!(n>=29&&n<=32))){const n=$('#mn'+y);n.textContent='Enter exactly 12 whole numbers between 29 and 32.';n.style.color='var(--acc)';return}
+    applyMonths(y,v);return}
+  if(r)applyMonths(+r.dataset.mlr,null);
+});
+renderQuick();
+/* ---------- v5: calendar import, quick chips, share, renewal alerts ---------- */
+let CALMSG='';
+/* quick-add chips */
+$('#add').addEventListener('click',e=>{
+  const a=e.target.closest('[data-amt]');if(a){$('#P').value=a.dataset.amt;preview();return}
+  const t=e.target.closest('[data-trm]');if(t){const m=+t.dataset.trm;if(m%12===0){$('#term').value=m/12;$('#unit').value=12}else{$('#term').value=m;$('#unit').value=1}preview()}});
+/* calendar import */
+function setMonths(out){
+  const keep=getStart();let diff=0;
+  Object.keys(out).forEach(y=>{const v=out[y];if(v.join()!==BSD0[y-Y0].join()){BSOV[y]=v;diff++}else delete BSOV[y];BSD[y-Y0]=v.slice()});
+  try{localStorage.setItem('fd-bsov',JSON.stringify(BSOV))}catch(e){}
+  rebuildMS();if(keep)setBS(keep);return diff;
+}
+function importCal(){
+  const txt=$('#calT').value,out={},ok=v=>Array.isArray(v)&&v.length===12&&v.every(n=>n>=29&&n<=32);let bad=0,j=null;
+  try{j=JSON.parse(txt)}catch(e){}
+  if(j&&typeof j==='object'){(Array.isArray(j)?j.map(r=>[r.year||r.y,r.months||r.days||r.m]):Object.entries(j)).forEach(([y,v])=>{y=+y;v=Array.isArray(v)?v.map(Number):v;if(y>=Y0&&y<Y0+BSD.length){if(ok(v))out[y]=v;else bad++}})}
+  else txt.split(/\r?\n/).forEach(l=>{const n=(l.match(/\d+/g)||[]).map(Number);if(n.length>=13&&n[0]>=Y0&&n[0]<Y0+BSD.length){const v=n.slice(1,13);if(ok(v))out[n[0]]=v;else bad++}});
+  const ys=Object.keys(out);
+  if(!ys.length){const m=$('#calM');m.textContent='No valid rows found. Use one line per year: the year followed by 12 month lengths (29–32).';m.style.color='var(--acc)';return}
+  const diff=setMonths(out);
+  CALMSG='Imported '+ys.length+' year(s); '+diff+' differ from the built-in data'+(bad?'; '+bad+' invalid row(s) skipped':'')+'.';
+  render();preview();renderSet();applyLang();
+}
+$('#settings').addEventListener('click',e=>{
+  if(e.target.closest('[data-calimp]'))importCal();
+  if(e.target.closest('[data-calrst]')){const keep=getStart();BSD0.forEach((r,i)=>BSD[i]=r.slice());BSOV={};try{localStorage.setItem('fd-bsov','{}')}catch(x){}rebuildMS();if(keep)setBS(keep);CALMSG='All years reset to the built-in data.';render();preview();renderSet();applyLang()}});
+$('#settings').addEventListener('change',e=>{if(e.target.id==='calF'){const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{$('#calT').value=String(rd.result)};rd.readAsText(f)}});
+/* share summary */
+const fqOf=o=>o.freq==='q'?'Bank quarter-end':o.freq==='0'?'At maturity':o.freq==='c'?'Every '+o.f+' months':({1:'Monthly',3:'Quarterly',6:'Half-yearly',12:'Annually'})[o.f];
+function summaryText(o){const c=calc(o);return '🏦 '+o.bank+(o.tag?' ('+o.tag+')':'')+'\nPrincipal: '+NPR(o.P)+'\nRate: '+o.r+'% p.a. · '+o.months+' months\nStart: '+dtxt(pd(o.start))+'\nMaturity: '+dtxt(c.end)+'\nInterest: '+fqOf(o)+(o.mode==='compound'?' (compounded)':' (paid out)')+'\nNet interest (after '+o.tds+'% TDS): '+NPR(c.net)+'\nTotal at maturity: '+NPR(c.total)+'\n— FD Manager Nepal'}
+function allText(){const A=fds.filter(o=>!o.closed&&!o.renewed);if(!A.length)return 'No active fixed deposits.';let P=0,N=0;const L=A.map(o=>{const c=calc(o);P+=o.P;N+=c.net;return '• '+o.bank+(o.tag?' ('+o.tag+')':'')+': '+NPR(o.P)+' @ '+o.r+'% — matures '+dtxt(c.end)});return '🏦 My fixed deposits ('+A.length+')\n'+L.join('\n')+'\nTotal principal: '+NPR(P)+'\nNet interest: '+NPR(N)+'\nTotal at maturity: '+NPR(P+N)+'\n— FD Manager Nepal'}
+function shareSheet(t){
+  $('#modal').innerHTML=`<div class="sheet"><div class="row"><b>📤 <span>Share summary</span></b><button class="btn ghost" id="mx" style="width:auto;padding:6px 12px">✕</button></div><textarea id="shT" rows="10" readonly style="width:100%;margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--ink);font:14px/1.45 inherit;font-family:inherit"></textarea><div class="acts" style="margin-top:12px">${navigator.share?'<button class="btn ghost" data-shn="1">📤 Share</button>':''}<button class="btn ghost" data-cp="1">📋 Copy</button></div><div class="note" id="shM"></div></div>`;
+  $('#shT').value=t;$('#modal').classList.remove('hide');applyLang();
+}
+$('#shAll').onclick=()=>{if(!fds.length)return msg('No records to share.');shareSheet(allText())};
+/* renewal alerts: <=30 days reminder, <=15 red, <10 flashing red, matured = renew or cancel */
+function alertList(){
+  const t0=day0(),out=[],ord={m:0,f:1,r:2,i:3};
+  fds.forEach(o=>{if(o.closed||o.renewed)return;const c=calc(o),dl=Math.round((c.end-t0)/864e5);
+    let lv=dl<=0?'m':null;if(!lv&&o.remind!==false)lv=dl<10?'f':dl<=15?'r':dl<=30?'i':null;
+    if(lv)out.push({o,c,dl,lv})});
+  return out.sort((a,b)=>ord[a.lv]-ord[b.lv]||a.dl-b.dl);
+}
+function alertHTML(a){
+  const{o,c,dl,lv}=a,ic={m:'⏳',f:'🚨',r:'⚠️',i:'🔔'}[lv];
+  const msg=lv==='m'?`<span>Matured on</span> ${dstr(c.end)} — <span>renew or cancel?</span>`:`<span>Matures in</span> ${dl} <span>days</span> · ${dstr(c.end)}`;
+  return `<div class="al ${lv}"><div class="row"><div><b>${ic} ${esc(o.bank)}${o.tag?` <span class="tag">${esc(o.tag)}</span>`:''}</b><div class="sub">${msg}</div></div><b>${NPR(c.total)}</b></div>${lv==='i'?'':`<div class="acts" style="margin-top:10px"><button class="btn ghost" data-rn="${o.id}">🔁 Renew</button>${lv==='m'?`<button class="btn ghost" data-rw="${o.id}">🔁 Renew + interest</button><button class="btn ghost" data-cl="${o.id}">✖ Cancel FD</button>`:''}</div>`}</div>`;
+}
+function renderAlerts(){$('#alerts').innerHTML=alertList().map(alertHTML).join('')}
+function cancelFD(id,b){
+  if(!b.dataset.sure){const t=b.dataset.t=b.textContent;b.dataset.sure=1;b.textContent='Tap again to cancel';setTimeout(()=>{if(b.isConnected){b.dataset.sure='';b.textContent=t}},4000);return}
+  const o=fds.find(x=>String(x.id)===String(id));if(o){o.closed=true;persist();closeModal();render()}
+}
+$('#alerts').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.rn)startRenew(b.dataset.rn,false);else if(b.dataset.rw)startRenew(b.dataset.rw,true);else if(b.dataset.cl)cancelFD(b.dataset.cl,b)});
+function dailyPopup(){
+  const t=iso(new Date());let a='';try{a=localStorage.getItem('fd-ack')}catch(e){}if(a===t)return;
+  const U=alertList().filter(x=>x.lv==='f'||x.lv==='m');if(!U.length)return;
+  try{localStorage.setItem('fd-ack',t)}catch(e){}
+  $('#modal').innerHTML=`<div class="sheet"><div class="row"><b style="font-size:17px">🚨 <span>Action needed today</span></b><button class="btn ghost" id="mx" style="width:auto;padding:6px 12px">✕</button></div>${U.map(alertHTML).join('')}</div>`;
+  $('#modal').classList.remove('hide');applyLang();
+}
+setTimeout(dailyPopup,600);
+$('#start').value=iso(new Date());fillBS();setBS(iso(new Date()));
+preview();render();
+</script></body></html>
