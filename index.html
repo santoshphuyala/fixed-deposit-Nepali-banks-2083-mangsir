@@ -71,6 +71,12 @@ th:first-child,td:first-child{text-align:left}th{color:var(--mut);font-size:11px
 .al.f{background:#c8102e;border-color:#c8102e;color:#fff;animation:fl 1s ease-in-out infinite}.al.f .tag{color:#fff;background:rgba(255,255,255,.22)}.al.f .btn.ghost{color:#fff;border-color:rgba(255,255,255,.7)}
 @keyframes fl{0%,100%{background:#c8102e;box-shadow:0 0 0 0 rgba(200,16,46,.55)}50%{background:#7a0a1c;box-shadow:0 0 0 9px rgba(200,16,46,0)}}
 @media(prefers-reduced-motion:reduce){.al.f{animation:none}}
+
+.fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;width:auto;margin:0;border-radius:99px;padding:12px 18px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.sdBk{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .2s;z-index:60}.sdBk.open{opacity:1;pointer-events:auto}
+.sd{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--bg);color:var(--ink);transform:translateX(100%);transition:transform .25s;z-index:61;overflow:auto;padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(28px + env(safe-area-inset-bottom,0px));box-shadow:-10px 0 30px rgba(0,0,0,.25)}.sd.open{transform:none}
+.sd .kpi{display:grid;grid-template-columns:1fr 1fr;gap:8px}.sd .card{margin-top:12px}.sd .card>b{display:block;margin-bottom:4px}
+@media(prefers-reduced-motion:reduce){.sd,.sdBk{transition:none}}
 </style><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script></head>
 <body><div class="wrap">
 <div class="hero">
@@ -113,6 +119,11 @@ th:first-child,td:first-child{text-align:left}th{color:var(--mut);font-size:11px
 </div>
 </div>
 
+<button class="btn fab" id="sdOpen" aria-haspopup="dialog">📊 FD Summary</button><div class="sdBk" id="sdBk"></div>
+<aside class="sd" id="sd" role="dialog" aria-label="FD Excel summary" aria-hidden="true"><div class="row"><h2 style="margin:0;font-size:19px">📊 FD Summary · Excel</h2><button class="btn ghost" id="sdX" style="width:auto;padding:6px 12px" aria-label="Close">✕</button></div>
+<div class="tools" style="margin-top:12px"><button class="btn ghost" id="sdImp">⬆ Import Excel</button><button class="btn ghost" id="sdBkp">⬇ Backup .xlsx</button><button class="btn ghost" id="sdRep">⬇ Summary report</button><button class="btn ghost" id="sdTo">➡ Add to My FDs</button><button class="btn ghost" id="sdClr">Clear</button></div>
+<label style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="checkbox" id="sdMerge" style="width:auto"><span>Merge into existing records (by id) instead of replacing</span></label>
+<input type="file" id="sdFile" accept=".xlsx,.xls,.csv" class="hide"><div class="note" id="sdMsg" style="margin-top:4px"></div><div id="sdBody"></div></aside>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const NPR=n=>'रू '+Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -122,6 +133,7 @@ let PROFS=[{id:'p1',name:'Personal'}],PID='p1';const kOf=p=>p==='p1'?KEY:KEY+':'
 try{PROFS=JSON.parse(localStorage.getItem('fd-profs'))||PROFS;PID=localStorage.getItem('fd-pid')||'p1';if(!PROFS.some(p=>p.id===PID))PID=PROFS[0].id}catch(e){}
 try{fds=JSON.parse(localStorage.getItem(kOf(PID))||'[]')}catch(e){fds=[]}
 const persist=()=>{try{localStorage.setItem(kOf(PID),JSON.stringify(fds));localStorage.setItem('fd-dirty','1')}catch(e){}};
+const uid=()=>Date.now()+Math.floor(Math.random()*1e6);
 const pd=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
 const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const addM=(s,m)=>{const d=pd(s),day=d.getDate();const t=new Date(d.getFullYear(),d.getMonth()+m,1);const last=new Date(t.getFullYear(),t.getMonth()+1,0).getDate();t.setDate(Math.min(day,last));return t};
@@ -142,7 +154,7 @@ function calc(o){if(o.basis==='bs'){const b=calcBS(o);if(b)return b}
 function readForm(){
   const fv=$('input[name=freq]:checked').value;
   const months=Math.round(parseFloat($('#term').value)*parseFloat($('#unit').value));
-  return{bank:$('#bank').value.trim()||'Fixed deposit',holder:$('#holder').value.trim(),P:parseFloat($('#P').value),r:parseFloat($('#r').value),months,start:getStart(),remind:$('#rmd').checked,tag:($('#tag').value||'').trim(),basis:fv==='q'?'bs':$('input[name=basis]:checked').value,tds:parseFloat($('#tds').value)||0,
+  return{bank:$('#bank').value.trim()||'Fixed deposit',holder:$('#holder').value.trim(),P:parseFloat($('#P').value),r:parseFloat($('#r').value),months,start:getStart(),remind:$('#rmd').checked,tag:($('#tag').value||'').trim(),basis:fv==='q'?'bs':$('input[name=basis]:checked').value,tds:Math.min(100,Math.max(0,parseFloat($('#tds').value)||0)),
     mode:$('input[name=mode]:checked').value,freq:fv,f:fv==='c'?Math.max(1,parseInt($('#cN').value)||1):fv==='q'?3:parseInt(fv)};
 }
 const valid=o=>o.P>0&&o.r>=0&&o.months>=1&&o.start;
@@ -150,7 +162,7 @@ const schedHTML=(c,comp)=>`<table><tr><th>Date</th>${c.basis?'<th>Days</th>':''}
 
 function preview0(e){syncDate(e);
   const o=readForm();$('#cWrap').classList.toggle('hide',o.freq!=='c');
-  if(!valid(o)){$('#res').innerHTML='<div class="tile main"><span>Enter valid details</span><b>–</b></div>';$('#sched').innerHTML='';return}
+  if(!valid(o)){$('#res').innerHTML='<div class="tile main"><span>Enter valid details</span><b>–</b></div>';$('#sched').innerHTML='';$('#matOut').value='';return}
   const c=calc(o);
   $('#res').innerHTML=`<div class="tile main"><span>Total at maturity · ${dstr(c.end)}</span><b>${NPR(c.total)}</b></div>
   <div class="tile"><span>Gross interest</span><b>${NPR(c.gross)}</b></div><div class="tile"><span>TDS deducted</span><b>${NPR(c.tax)}</b></div>
@@ -162,7 +174,7 @@ function render0(){
   const today=new Date();today.setHours(0,0,0,0);
   let P=0,I=0,T=0,act=0,next=null;
   const items=fds.map(o=>{const c=calc(o),end=c.end,st=pd(o.start),done=end<=today;
-    if(!done&&!o.closed){act++;c.rows.forEach(x=>{if(x.d>=today&&(!next||x.d<next.d))next={d:x.d,v:x.net,b:o.bank}})}
+    if(!done&&!o.closed&&!o.renewed){act++;c.rows.forEach(x=>{if(x.d>=today&&(!next||x.d<next.d))next={d:x.d,v:x.net,b:o.bank}})}
     if(!o.closed&&!o.renewed){P+=o.P;I+=c.net;T+=c.total}return{o,c,end,st,done}}).sort((a,b)=>a.end-b.end);
   $('#hTot').textContent=NPR(P);$('#hInt').textContent=NPR(I);$('#hMat').textContent=NPR(T);$('#hCnt').textContent=act;
   const hn=$('#hNext');hn.classList.toggle('hide',!next);if(next)hn.innerHTML=`⏰ <span>Next payout:</span> <b>${NPR(next.v)}</b> <span>from</span> ${esc(next.b)} <span>on</span> ${dstr(next.d)}`;
@@ -187,7 +199,7 @@ $('#list').addEventListener('click',e=>{
 $$('.tabs button').forEach(b=>b.onclick=()=>{$$('.tabs button').forEach(x=>x.classList.toggle('on',x===b));$('#listWrap').classList.toggle('hide',b.dataset.t!=='list');$('#add').classList.toggle('hide',b.dataset.t!=='add');$('#insights').classList.toggle('hide',b.dataset.t!=='ins');if(b.dataset.t==='ins')renderIns();$('#settings').classList.toggle('hide',b.dataset.t!=='set');if(b.dataset.t==='set')renderSet()});
 $$('#add input,#add select').forEach(el=>{el.addEventListener('input',preview);el.addEventListener('change',preview)});
 $('#save').onclick=()=>{const o=readForm();if(!valid(o)){alert('Please enter principal, rate, term and start date.');return}
-  remember(o);if(editId!=null){o.id=editId;fds=fds.map(x=>x.id===editId?o:x);setEdit(null)}else{o.id=Date.now();fds.push(o);if(renewFrom!=null){const z=fds.find(x=>x.id===renewFrom);if(z)z.renewed=true;renewFrom=null}}persist();render();$('.tabs button[data-t=list]').click();window.scrollTo(0,0)};
+  remember(o);if(editId!=null){const old=fds.find(x=>x.id===editId);o.id=editId;if(old){if(old.closed)o.closed=true;if(old.renewed)o.renewed=true}fds=fds.map(x=>x.id===editId?o:x);setEdit(null)}else{o.id=uid();fds.push(o);if(renewFrom!=null){const z=fds.find(x=>x.id===renewFrom);if(z)z.renewed=true;renewFrom=null}}persist();render();$('.tabs button[data-t=list]').click();window.scrollTo(0,0)};
 /* ---------- BS engine ---------- */
 const BSN=['Baisakh','Jestha','Ashadh','Shrawan','Bhadra','Ashwin','Kartik','Mangsir','Poush','Magh','Falgun','Chaitra'],
 BSP=['बैशाख','जेष्ठ','आषाढ','श्रावण','भदौ','आश्विन','कार्तिक','मंसिर','पौष','माघ','फाल्गुन','चैत्र'];
@@ -219,6 +231,7 @@ function calcBS(o){
     gross+=int;tax+=t;tot+=days;if(comp)bal+=int;
     rows.push({d:pd(dayISO(Q?Q[i-1].pay:nd)),int,t,net:int-t,bal,days});prev=nd;
   }
+  if(!rows.length)return null;
   const net=gross-tax;
   return{rows,gross,tax,net,total:o.P+net,eff:comp?(Math.pow(1+gross/o.P,365/tot)-1)*100:o.r,end:rows[rows.length-1].d,basis:'bs',mon:Object.values(acc).sort((a,b)=>a.k-b.k)};
 }
@@ -229,19 +242,21 @@ function dtxt(d){const b=ad2bs(iso(d));return b?b.d+' '+BSN[b.m-1]+' '+b.y+' BS 
 const bst=s=>{const b=ad2bs(s);return b?b.y+'-'+String(b.m).padStart(2,'0')+'-'+String(b.d).padStart(2,'0'):''};
 $$('.dm button').forEach(b=>{b.classList.toggle('on',b.dataset.dm===DM);b.onclick=()=>{DM=b.dataset.dm;try{localStorage.setItem('fd-dm',DM)}catch(e){}$$('.dm button').forEach(x=>x.classList.toggle('on',x===b));render();preview()}});
 const dsys=()=>$('input[name=dsys]:checked').value;
-function getStart(){return dsys()==='AD'?$('#start').value:(bs2adISO(+$('#bY').value,+$('#bM').value,+$('#bD').value)||'')}
+let bsBad=false;
+function getStart(){return dsys()==='AD'?$('#start').value:(bsBad?'':bs2adISO(+$('#bY').value,+$('#bM').value,+$('#bD').value)||'')}
 function fillBS(){$('#bY').innerHTML=Array.from({length:BSD.length},(_,i)=>`<option value="${Y0+i}">${Y0+i}</option>`).join('');$('#bM').innerHTML=BSN.map((n,i)=>`<option value="${i+1}">${n} · ${BSP[i]}</option>`).join('')}
 function fillDays(cur){const n=bsDim(+$('#bY').value,+$('#bM').value);cur=cur||+$('#bD').value||1;$('#bD').innerHTML=Array.from({length:n},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');$('#bD').value=Math.min(cur,n)}
-function setBS(s){const b=ad2bs(s);if(!b)return;$('#bY').value=b.y;$('#bM').value=b.m;fillDays(b.d)}
+function setBS(s){const b=ad2bs(s);if(!b){bsBad=true;return}bsBad=false;$('#bY').value=b.y;$('#bM').value=b.m;fillDays(b.d)}
 function syncDate(e){
   const t=e&&e.target;
   if(t&&(t.id==='bY'||t.id==='bM'))fillDays();
+  if(t&&['bY','bM','bD'].includes(t.id))bsBad=false;
   if(t&&((t.name==='dsys'&&dsys()==='BS')||t.id==='start'))setBS($('#start').value);
   const bs=dsys()==='BS';
   $('#bsIn').classList.toggle('hide',!bs);$('#start').classList.toggle('hide',bs);
   if(bs)$('#start').value=getStart();
   const s=getStart(),b=ad2bs(s);
-  $('#conv').textContent=!s?'':bs?'AD: '+fmt(pd(s)):(b?'BS: '+b.d+' '+BSN[b.m-1]+' '+b.y+' ('+BSP[b.m-1]+')':'Outside the supported BS range (2070–2099)');
+  $('#conv').textContent=!s?(bsBad?'Outside the supported BS range (2070–2099) — pick a BS date above.':''):bs?'AD: '+fmt(pd(s)):(b?'BS: '+b.d+' '+BSN[b.m-1]+' '+b.y+' ('+BSP[b.m-1]+')':'Outside the supported BS range (2070–2099)');
 }
 /* ---------- Edit ---------- */
 let editId=null;
@@ -260,18 +275,22 @@ $('#cancel').onclick=()=>{setEdit(null);$('.tabs button[data-t=list]').click()};
 /* ---------- Import / Export ---------- */
 const msg=t=>{$('#msg').textContent=t};
 async function saveFile(name,data){
-  try{const d=window.claude?await window.claude.use('downloads'):null;
-    if(!d){msg('File download is not available in this view.');return}
-    await d.save({filename:name,data});msg('Exported '+name);if(!/\.pdf$/.test(name)){try{localStorage.setItem('fd-dirty','0');localStorage.setItem('fd-lastbk',iso(new Date()))}catch(x){}renderBk()}
+  try{
+    const d=window.claude?await window.claude.use('downloads'):null;
+    if(d)await d.save({filename:name,data});
+    else{
+      const ext=/\.pdf$/i.test(name)?'application/pdf':/\.xlsx$/i.test(name)?'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':/\.json$/i.test(name)?'application/json':'text/plain';
+      const body=data instanceof Array?new Uint8Array(data):data,blob=new Blob([body],{type:ext}),a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    }
+    msg('Exported '+name);if(!/\.pdf$/.test(name)){try{localStorage.setItem('fd-dirty','0');localStorage.setItem('fd-lastbk',iso(new Date()))}catch(x){}renderBk()}
   }catch(e){msg(e&&e.code==='declined'?'Export cancelled.':'Could not export the file.')}
 }
-$('#exJ').onclick=()=>{if(!fds.length)return msg('No records to export.');
-  saveFile('fd-records-'+iso(new Date())+'.json',JSON.stringify({app:'fd-manager-nepal',version:1,exported:iso(new Date()),fds},null,2))};
 $('#exX').onclick=()=>{
   if(!fds.length)return msg('No records to export.');if(!window.XLSX)return msg('Excel library did not load.');
   const A=[],S=[],M=[];
   fds.forEach(o=>{const c=calc(o);
-    (c.mon||[]).forEach(z=>M.push({Bank:o.bank,Holder:o.holder,Month:BSN[z.k%12],Year:Y0+Math.floor(z.k/12),Days:z.days,Interest:+z.int.toFixed(2)}));A.push({Bank:o.bank,Holder:o.holder,Tag:o.tag||'',Principal:o.P,'Rate %':o.r,Months:o.months,'Start Date':o.start,'Start Date (BS)':bst(o.start),'TDS %':o.tds,Mode:o.mode,Basis:o.basis||'simple','Frequency (months)':o.freq==='q'?'q':o.f>0?o.f:0,'Maturity Date':iso(c.end),'Maturity Date (BS)':bst(iso(c.end)),'Gross Interest':+c.gross.toFixed(2),'TDS Amount':+c.tax.toFixed(2),'Net Interest':+c.net.toFixed(2),'Total at Maturity':+c.total.toFixed(2)});
+    (c.mon||[]).forEach(z=>M.push({Bank:o.bank,Holder:o.holder,Month:BSN[z.k%12],Year:Y0+Math.floor(z.k/12),Days:z.days,Interest:+z.int.toFixed(2)}));A.push({ID:o.src||String(o.id),Bank:o.bank,Holder:o.holder,Tag:o.tag||'',Principal:o.P,'Rate %':o.r,Months:o.months,'Start Date':o.start,'Start Date (BS)':bst(o.start),'TDS %':o.tds,Mode:o.mode,Basis:o.basis||'simple','Frequency (months)':o.freq==='q'?'q':o.f>0?o.f:0,'Maturity Date':iso(c.end),'Maturity Date (BS)':bst(iso(c.end)),'Gross Interest':+c.gross.toFixed(2),'TDS Amount':+c.tax.toFixed(2),'Net Interest':+c.net.toFixed(2),'Total at Maturity':+c.total.toFixed(2),Status:o.closed?'Closed':o.renewed?'Renewed':'Active',Remind:o.remind===false?'No':'Yes'});
     c.rows.forEach((x,i)=>S.push({Bank:o.bank,Holder:o.holder,'#':i+1,Date:iso(x.d),'Date (BS)':bst(iso(x.d)),Days:x.days||'',Interest:+x.int.toFixed(2),TDS:+x.t.toFixed(2),Net:+x.net.toFixed(2)}))});
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(A),'FDs');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S),'Payout Schedule');if(M.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(M),'BS Month-wise');
@@ -279,36 +298,21 @@ $('#exX').onclick=()=>{
 };
 function normDate(v){
   if(typeof v==='number'){const d=new Date(Math.round((v-25569)*864e5));return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0')}
-  const s=String(v||'').trim();const mm=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(mm)return +mm[1]>=Y0?(bs2adISO(+mm[1],+mm[2],+mm[3])||null):s.slice(0,10);const d=new Date(s);return isNaN(d)?null:iso(d);
+  const s=String(v||'').trim();const mm=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(mm)return +mm[1]>=Y0?(bs2adISO(+mm[1],+mm[2],+mm[3])||null):s.slice(0,10);const dm=s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);if(dm)return dm[3]+'-'+dm[2].padStart(2,'0')+'-'+dm[1].padStart(2,'0');const d=new Date(s);return isNaN(d)?null:iso(d);
 }
 function norm(r){
   if(!r||typeof r!=='object')return null;
   const m={};for(const k in r)m[k.toLowerCase().replace(/[^a-z]/g,'')]=r[k];
   const pick=(...a)=>{for(const x of a)if(m[x]!==undefined&&m[x]!=='')return m[x]};
-  const o={bank:String(pick('bank','bankinstitution')||'Fixed deposit').trim(),holder:String(pick('holder','label','labelholder')||'').trim(),tag:String(pick('tag','category')||'').trim(),
-    P:parseFloat(pick('p','principal','principalnpr')),r:parseFloat(pick('r','rate','ratepa')),months:parseInt(pick('months','term')),
+  const o={bank:String(pick('bank','bankinstitution')||'Fixed deposit').trim(),holder:String(pick('holder','accountholder','label','labelholder')||'').trim(),tag:String(pick('tag','category')||'').trim(),
+    P:parseFloat(pick('p','principal','principalnpr','amount')),r:parseFloat(pick('r','rate','ratepa')),months:pick('months','term')!==undefined?parseInt(pick('months','term')):Math.round((parseFloat(pick('duration'))||0)*(/year/i.test(String(pick('durationunit')||''))?12:1)),
     start:normDate(pick('start','startdate','startdatebs')),tds:parseFloat(pick('tds','tdspercent')),mode:/comp/i.test(String(pick('mode')))?'compound':'payout',basis:/^(bs|actual)/i.test(String(pick('basis')||''))?'bs':'simple'};
-  if(isNaN(o.tds))o.tds=5;
-  const isq=/^q/i.test(String(pick('freq','frequency','frequencymonths')||''));let f=parseInt(pick('f','freq','frequency','frequencymonths'));if(isNaN(f))f=3;
+  if(isNaN(o.tds))o.tds=5;o.tds=Math.min(100,Math.max(0,o.tds));
+  const fr=pick('freq','frequency','frequencymonths'),isq=fr===undefined||/^q/i.test(String(fr));let f=parseInt(pick('f','freq','frequency','frequencymonths'));if(isNaN(f))f=3;
   o.f=f<=0?0:f;o.freq=isq?'q':[1,3,6,12].includes(f)?String(f):f<=0?'0':'c';if(isq)o.basis='bs';
-  if(r.closed===true)o.closed=true;if(r.renewed===true)o.renewed=true;if(r.remind===false)o.remind=false;return valid(o)?o:null;
+  if(r.closed===true)o.closed=true;if(r.renewed===true)o.renewed=true;if(r.remind===false)o.remind=false;const st=String(pick('status')||'');if(/^closed/i.test(st))o.closed=true;if(/^renewed/i.test(st))o.renewed=true;if(/^(no|false|0)$/i.test(String(pick('remind')==null?'':pick('remind'))))o.remind=false;const sid=pick('id','src');if(sid!==undefined)o.src=String(r.src||sid);return valid(o)?o:null;
 }
 $('#imp').onclick=()=>$('#file').click();
-$('#file').onchange=e=>{
-  const f=e.target.files[0];e.target.value='';if(!f)return;
-  const isJ=/\.json$/i.test(f.name),rd=new FileReader();
-  rd.onload=()=>{try{
-    let rows;
-    if(isJ){const j=JSON.parse(rd.result);rows=Array.isArray(j)?j:(j.fds||[])}
-    else{const wb=XLSX.read(rd.result,{type:'array'});rows=XLSX.utils.sheet_to_json(wb.Sheets['FDs']||wb.Sheets[wb.SheetNames[0]],{defval:''})}
-    const key=o=>[o.bank,o.P,o.r,o.months,o.start].join('|'),have=new Set(fds.map(key));
-    const ok=rows.map(norm).filter(Boolean);let add=0,dup=0;
-    ok.forEach((o,i)=>{if(have.has(key(o))){dup++;return}have.add(key(o));o.id=Date.now()+i;fds.push(o);add++});
-    persist();render();
-    msg('Imported '+add+' of '+rows.length+' rows'+(dup?', skipped '+dup+' duplicate(s)':'')+(rows.length-ok.length?', '+(rows.length-ok.length)+' invalid row(s) ignored':'')+'.');
-  }catch(err){msg('Could not read that file. Use a JSON or Excel file exported from this app.')}};
-  isJ?rd.readAsText(f):rd.readAsArrayBuffer(f);
-};
 $('#clr').onclick=e=>{const b=e.target;
   if(b.dataset.sure){fds=[];persist();render();b.dataset.sure='';b.textContent='Clear all';msg('All records cleared.')}
   else{b.dataset.sure=1;b.textContent='Tap again to confirm';setTimeout(()=>{b.dataset.sure='';b.textContent='Clear all'},4000)}};
@@ -319,8 +323,8 @@ const FYk=d=>{const b=ad2bs(iso(d)),y=b?(b.m>=4?b.y:b.y-1):d.getFullYear();retur
 const K=v=>v>=1e7?(v/1e7).toFixed(1)+'Cr':v>=1e5?(v/1e5).toFixed(1)+'L':v>=1e3?Math.round(v/1e3)+'k':Math.round(v)+'';
 const NF=n=>Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
 const day0=()=>{const t=new Date();t.setHours(0,0,0,0);return t};
-function fyData(){const m={};fds.forEach(o=>calc(o).rows.forEach(x=>{const k=FYk(x.d),a=m[k]||(m[k]={k,g:0,t:0,n:0});a.g+=x.int;a.t+=x.t;a.n+=x.net}));return Object.values(m).sort((a,b)=>a.k<b.k?-1:1)}
-function events(days){const t0=day0(),ev=[];fds.forEach(o=>{if(o.closed)return;const c=calc(o);c.rows.forEach((x,i)=>{const last=i===c.rows.length-1,dl=Math.round((x.d-t0)/864e5);if(dl>=0&&dl<=days)ev.push({o,d:x.d,dl,last,amt:x.net+(last?o.P:0)})})});return ev.sort((a,b)=>a.d-b.d)}
+function fyData(){const m={},t0=day0();fds.forEach(o=>calc(o).rows.forEach(x=>{if((o.closed||o.renewed)&&x.d>t0)return;const k=FYk(x.d),a=m[k]||(m[k]={k,g:0,t:0,n:0});a.g+=x.int;a.t+=x.t;a.n+=x.net}));return Object.values(m).sort((a,b)=>a.k<b.k?-1:1)}
+function events(days){const t0=day0(),ev=[];fds.forEach(o=>{if(o.closed||o.renewed)return;const c=calc(o);c.rows.forEach((x,i)=>{const last=i===c.rows.length-1,dl=Math.round((x.d-t0)/864e5);if(dl>=0&&dl<=days)ev.push({o,d:x.d,dl,last,amt:x.net+(last?o.P:0)})})});return ev.sort((a,b)=>a.d-b.d)}
 /* reminders */
 let REM=30;try{REM=+localStorage.getItem('fd-rem')||30}catch(e){}
 function renderRem(){
@@ -335,31 +339,13 @@ function renderIns(){
   const bank={};let tp=0;fds.forEach(o=>{if(o.closed||o.renewed)return;bank[o.bank]=(bank[o.bank]||0)+o.P;tp+=o.P});
   const sb=ad2bs(iso(day0())),bk=[],t0=day0();
   if(sb)for(let i=0;i<12;i++){const b=addBSM({y:sb.y,m:sb.m,d:1},i);if(b)bk.push({y:b.y,m:b.m,v:0})}
-  fds.forEach(o=>{if(o.closed)return;const c=calc(o);c.rows.forEach((x,i)=>{if(x.d<t0)return;const b=ad2bs(iso(x.d)),z=b&&bk.find(q=>q.y===b.y&&q.m===b.m);if(z)z.v+=x.net+(i===c.rows.length-1?o.P:0)})});
+  fds.forEach(o=>{if(o.closed||o.renewed)return;const c=calc(o);c.rows.forEach((x,i)=>{if(x.d<t0)return;const b=ad2bs(iso(x.d)),z=b&&bk.find(q=>q.y===b.y&&q.m===b.m);if(z)z.v+=x.net+(i===c.rows.length-1?o.P:0)})});
   const mx=Math.max(1,...bk.map(z=>z.v));
   $('#insights').innerHTML=`<div class="card"><b>Fiscal-year interest &amp; TDS</b><div class="note">Fiscal year: Shrawan 1 to Ashadh end of the next year. Interest counts in the year it is paid (quarter-end).</div><div class="tw"><table style="min-width:320px"><tr><th>Fiscal year</th><th>Gross</th><th>TDS</th><th>Net</th></tr>${fyData().map(a=>`<tr><td>${a.k}</td><td>${NPR(a.g)}</td><td>${NPR(a.t)}</td><td><b>${NPR(a.n)}</b></td></tr>`).join('')}</table></div></div>
   <div class="card"><b>Deposits by bank</b>${Object.entries(bank).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="hb"><div class="row"><span>${esc(k)}</span><b>${NPR(v)} · ${(v/tp*100).toFixed(0)}%</b></div><div class="bar"><i style="width:${v/tp*100}%"></i></div></div>`).join('')}</div>
   <div class="card"><div class="row"><b>Cash-flow chart</b><div class="chips" style="margin:0"><span class="chip ${CFM==='m'?'on':''}" data-cf="m">Monthly</span><span class="chip ${CFM==='q'?'on':''}" data-cf="q">Quarterly</span></div></div><canvas id="cf" style="width:100%;height:200px;margin-top:10px"></canvas><div class="note">Interest payouts plus principal on maturity, by BS month or bank quarter.</div></div>
   <div class="card"><b>Cash inflow · next 12 BS months</b><div class="cols">${bk.map(z=>`<div class="col">${z.v?K(z.v):''}<i style="height:${z.v/mx*100*.75}%"></i>${BSN[z.m-1].slice(0,3)}</div>`).join('')}</div><div class="note">Interest payouts plus principal on maturity.</div></div>`;drawCF();
 }
-/* PDF */
-$('#pdf').onclick=async()=>{
-  if(!fds.length)return msg('No records to export.');
-  const J=window.jspdf&&window.jspdf.jsPDF;if(!J)return msg('PDF library did not load.');
-  const d=new J({unit:'mm',format:'a4'}),T=day0(),bt=x=>{const b=ad2bs(iso(x));return b?b.d+' '+BSN[b.m-1]+' '+b.y:fmt(x)};
-  let y=16;const tx=(s,x,z,b,al)=>{d.setFont('helvetica',b?'bold':'normal');d.setFontSize(z);d.text(String(s),x,y,al?{align:al}:undefined)},nl=h=>{y+=h;if(y>280){d.addPage();y=16}};
-  const cs=fds.map(o=>({o,c:calc(o)})),P=cs.reduce((a,z)=>a+z.o.P,0),N=cs.reduce((a,z)=>a+z.c.net,0);
-  tx('Fixed Deposit Report',10,18,1);nl(7);tx('Generated '+bt(T)+' BS  |  '+fmt(T)+' AD  |  Amounts in Rs',10,9);nl(9);
-  tx('Total principal: '+NF(P),10,11,1);nl(6);tx('Net interest (after TDS): '+NF(N)+'    Total at maturity: '+NF(P+N),10,11,1);nl(10);
-  tx('Deposits',10,12,1);nl(6);
-  tx('Bank',10,9,1);tx('Principal',80,9,1,'right');tx('Rate',92,9,1,'right');tx('Matures (BS)',96,9,1);tx('Net interest',152,9,1,'right');tx('Total',200,9,1,'right');nl(2);d.line(10,y,200,y);nl(5);
-  cs.forEach(z=>{tx(z.o.bank.slice(0,34),10,9);tx(NF(z.o.P),80,9,0,'right');tx(z.o.r+'%',92,9,0,'right');tx(bt(z.c.end),96,9);tx(NF(z.c.net),152,9,0,'right');tx(NF(z.c.total),200,9,0,'right');nl(5.5)});
-  nl(6);tx('Fiscal-year summary (Shrawan-Ashadh)',10,12,1);nl(6);
-  tx('Fiscal year',10,9,1);tx('Gross interest',90,9,1,'right');tx('TDS',130,9,1,'right');tx('Net interest',170,9,1,'right');nl(2);d.line(10,y,200,y);nl(5);
-  fyData().forEach(a=>{tx(a.k,10,9);tx(NF(a.g),90,9,0,'right');tx(NF(a.t),130,9,0,'right');tx(NF(a.n),170,9,0,'right');nl(5.5)});
-  const ev=events(90);if(ev.length){nl(6);tx('Upcoming in the next 90 days',10,12,1);nl(6);ev.forEach(e=>{tx(bt(e.d),10,9);tx(e.o.bank.slice(0,30),50,9);tx(e.last?'Maturity':'Interest payout',110,9);tx(NF(e.amt),200,9,0,'right');nl(5.5)})}
-  await saveFile('fd-report-'+iso(T)+'.pdf',d.output('arraybuffer'));
-};
 /* Nepali */
 const EX={'Matured on':'परिपक्व भएको','renew or cancel?':'नवीकरण वा रद्द?','Matures in':'परिपक्वता हुन बाँकी','✖ Cancel FD':'✖ FD रद्द','✖ Cancel':'✖ रद्द','↩ Reopen':'↩ पुन: खोल्नुहोस्','Closed':'बन्द','📤 Share':'📤 सेयर','📤 Share summary':'📤 सारांश सेयर','Share summary':'सारांश सेयर','Action needed today':'आज कारबाही आवश्यक','Remind me before maturity (30 / 15 / 10 days)':'परिपक्वता अघि सम्झाउनुहोस् (30 / 15 / 10 दिन)','Import official calendar':'आधिकारिक पात्रो आयात','Import':'आयात','Reset all years':'सबै वर्ष रिसेट','📋 Copy':'📋 कपी','Settings':'सेटिङ','⚡ Quick entry':'⚡ छिटो प्रविष्टि','Last entry:':'पछिल्लो प्रविष्टि:','↻ Use & edit':'↻ प्रयोग र सम्पादन','📋 Duplicate':'📋 प्रतिलिपि','Save':'सुरक्षित','Reset':'रिसेट','Saved banks':'सुरक्षित बैंकहरू','edited':'सम्पादित','Bank quarter-end':'बैंक त्रैमासिक अन्त','Bank quarter-end: accrued interest is paid on the last day of Ashadh, Ashwin, Poush and Chaitra, whatever the opening date.':'बैंक त्रैमासिक अन्त: खोलेको मिति जेसुकै भए पनि आषाढ, आश्विन, पौष र चैत्र मसान्तमा आर्जित ब्याज भुक्तानी हुन्छ।','Fiscal year: Shrawan 1 to Ashadh end of the next year. Interest counts in the year it is paid (quarter-end).':'आर्थिक वर्ष: श्रावण १ देखि अर्को वर्षको आषाढ मसान्तसम्म। ब्याज भुक्तानी हुने वर्षमा गनिन्छ।','Tag / category':'ट्याग / वर्ग','Cash-flow chart':'नगद प्रवाह चार्ट','Interest payouts plus principal on maturity, by BS month or bank quarter.':'बि.सं. महिना वा बैंक त्रैमासिक अनुसार ब्याज र परिपक्वतामा सावा।','Renewed':'नवीकरण भयो','🔁 Renew':'🔁 नवीकरण','🔁 Renew principal':'🔁 सावा नवीकरण','🔁 Renew + interest':'🔁 सावा + ब्याज नवीकरण','⭐ Templates':'⭐ टेम्पलेट','⭐ Save as template':'⭐ टेम्पलेटमा सुरक्षित','✓ Saved':'✓ सुरक्षित','＋ Profile':'＋ प्रोफाइल','No matching deposits.':'मेल खाने निक्षेप फेला परेन।','Interest rate':'ब्याज दर','Term':'अवधि','Maturity date':'परिपक्वता मिति','Payout':'भुक्तानी','Basis':'आधार','Export JSON':'JSON निर्यात','💾 Data is stored only in this browser. Export a JSON backup after each session.':'💾 डेटा यही ब्राउजरमा मात्र छ। प्रत्येक सत्रपछि JSON ब्याकअप निर्यात गर्नुहोस्।','Fixed Deposit Report':'मुद्दती निक्षेप प्रतिवेदन','Generated':'तयार मिति','Amounts in Rs':'रकम रुपैँयामा','Total principal':'कुल सावा','Deposits':'निक्षेपहरू','Bank':'बैंक','Rate':'दर','Matures (BS)':'परिपक्वता (बि.सं.)','Total':'जम्मा','Fiscal-year summary (Shrawan-Ashadh)':'आर्थिक वर्ष सारांश (श्रावण–आषाढ)','Upcoming in the next 90 days':'आगामी ९० दिनभित्र','Maturity':'परिपक्वता','My FDs':'मेरा FD','Insights':'विश्लेषण','Add / Calculate':'थप / गणना','Total principal invested':'कुल लगानी (सावा)','Net interest (after TDS)':'खुद ब्याज (कर पछि)','Total at maturity':'परिपक्वतामा जम्मा','Active deposits':'सक्रिय निक्षेप','⬇ Export JSON':'⬇ JSON निर्यात','⬇ Export Excel':'⬇ Excel निर्यात','⬆ Import JSON / Excel':'⬆ JSON / Excel आयात','📄 PDF report':'📄 PDF रिपोर्ट','Clear all':'सबै हटाउनुहोस्','Upcoming':'आउँदो','days':'दिन','Today':'आज','Interest payout':'ब्याज भुक्तानी','Matures · principal + interest':'परिपक्व · सावा + ब्याज','Nothing due in this period.':'यस अवधिमा कुनै रकम आउँदैन।','Next payout:':'अर्को भुक्तानी:','from':'बाट','on':'मिति','No fixed deposits yet.':'अझै कुनै मुद्दती निक्षेप छैन।','Tap':'ट्याप गर्नुहोस्','to record your first one.':'र पहिलो थप्नुहोस्।','Add an FD to see insights.':'विश्लेषण हेर्न FD थप्नुहोस्।','Fiscal-year interest & TDS':'आर्थिक वर्षको ब्याज र कर','Counted in the fiscal year (Shrawan–Ashadh) in which each payout falls.':'प्रत्येक भुक्तानी पर्ने आर्थिक वर्ष (श्रावण–आषाढ) अनुसार।','Fiscal year':'आर्थिक वर्ष','Gross':'कुल','Deposits by bank':'बैंक अनुसार निक्षेप','Cash inflow · next 12 BS months':'आगामी १२ बि.सं. महिनाको नगद आगमन','Interest payouts plus principal on maturity.':'ब्याज भुक्तानी र परिपक्वतामा सावा।','Bank / Institution':'बैंक / संस्था','Label / Holder':'नाम / धनी','Principal (रू)':'सावा (रू)','Interest rate (% p.a.)':'ब्याज दर (% वार्षिक)','Term (BS months)':'अवधि (बि.सं. महिना)','Unit':'एकाइ','Months':'महिना','Years':'वर्ष','Start date':'सुरु मिति','TDS on interest (%)':'ब्याजमा कर कट्टी (%)','Maturity date (calculated)':'परिपक्वता मिति (गणना)','Interest basis':'ब्याज आधार','BS months · actual days ÷ 365':'बि.सं. महिना · वास्तविक दिन ÷ 365','Simple · months ÷ 12':'साधारण · महिना ÷ 12','Interest handling':'ब्याज व्यवस्था','Pay out interest':'ब्याज भुक्तानी','Reinvest (compound)':'पुनर्लगानी (चक्रीय)','Frequency':'अन्तराल','Monthly':'मासिक','Quarterly':'त्रैमासिक','Half-yearly':'अर्धवार्षिक','Annually':'वार्षिक','At maturity':'परिपक्वतामा','Custom':'अनुकूल','Custom: every N months':'अनुकूल: प्रत्येक N महिना','Gross interest':'कुल ब्याज','TDS deducted':'कर कट्टी','Net interest':'खुद ब्याज','Effective yield p.a.':'प्रभावकारी प्रतिफल वार्षिक','Save this FD':'यो FD सुरक्षित गर्नुहोस्','Update FD':'FD अद्यावधिक गर्नुहोस्','Cancel edit':'सम्पादन रद्द','Date':'मिति','Days':'दिन','Interest':'ब्याज','TDS':'कर','Net':'खुद','Balance':'मौज्दात','✏️ Edit':'✏️ सम्पादन','Schedule':'तालिका','Delete':'मेट्नुहोस्','Principal':'सावा','BS month':'बि.सं. महिना','Interest accrued':'आर्जित ब्याज','Month-wise accrual · BS calendar':'महिनागत ब्याज · बि.सं. पात्रो','Matured':'परिपक्व'};
 const PH=[['Month lengths for BS','बि.सं. महिनाको दिन'],['bank quarter-end','बैंक त्रैमासिक अन्त'],['monthly','मासिक'],['quarterly','त्रैमासिक'],['half-yearly','अर्धवार्षिक'],['annually','वार्षिक'],['at maturity','परिपक्वतामा'],['Compounded','चक्रीय'],['Paid out','भुक्तानी'],['Half-yearly','अर्धवार्षिक'],['Quarterly','त्रैमासिक'],['Monthly','मासिक'],['Annually','वार्षिक'],['At maturity','परिपक्वतामा'],['BS days ÷365','बि.सं. दिन'],[' days left',' दिन बाँकी'],[' mo ·',' महिना ·'],['Every ','प्रत्येक '],['Matured','परिपक्व'],['✏️ Editing:','✏️ सम्पादन:'],...BSN.map((n,i)=>[n,BSP[i]]),...['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((n,i)=>[n,['जनवरी','फेब्रुअरी','मार्च','अप्रिल','मे','जुन','जुलाई','अगस्ट','सेप्टेम्बर','अक्टोबर','नोभेम्बर','डिसेम्बर'][i]])];
@@ -449,7 +435,7 @@ $('#tplSave').onclick=e=>{const b=e.target,o=readForm();if(!valid(o))return;
   TPL.push({name:o.bank+' · '+K(o.P)+' · '+o.r+'%'+(o.tag?' · '+o.tag:''),bank:o.bank,holder:o.holder,tag:o.tag||'',P:o.P,r:o.r,months:o.months,tds:o.tds,mode:o.mode,basis:o.basis,freq:o.freq,f:o.f});
   saveTpl();renderTpl();applyLang();b.textContent='✓ Saved';setTimeout(()=>{b.textContent='⭐ Save as template';applyLang()},1500)};
 /* canvas cash-flow chart */
-function inflowEv(){const t0=day0(),ev=[];fds.forEach(o=>{if(o.closed)return;const c=calc(o);c.rows.forEach((x,i)=>{if(x.d<t0)return;const b=ad2bs(iso(x.d));if(b)ev.push({b,v:x.net+(i===c.rows.length-1?o.P:0)})})});return ev}
+function inflowEv(){const t0=day0(),ev=[];fds.forEach(o=>{if(o.closed||o.renewed)return;const c=calc(o);c.rows.forEach((x,i)=>{if(x.d<t0)return;const b=ad2bs(iso(x.d));if(b)ev.push({b,v:x.net+(i===c.rows.length-1?o.P:0)})})});return ev}
 function drawCF(){
   const cv=$('#cf');if(!cv||!cv.clientWidth)return;
   const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=200;cv.width=w*dpr;cv.height=h*dpr;const g=cv.getContext('2d');g.scale(dpr,dpr);
@@ -476,8 +462,8 @@ $('#exJ').onclick=()=>{
 };
 $('#file').onchange=e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
-  const isJ=/\.json$/i.test(f.name),rd=new FileReader(),key=o=>[o.bank,o.P,o.r,o.months,o.start].join('|');
-  const merge=(arr,rows)=>{const have=new Set(arr.map(key));let a=0,dd=0,bad=0;rows.forEach((r,i)=>{const o=norm(r);if(!o){bad++;return}if(have.has(key(o))){dd++;return}have.add(key(o));o.id=Date.now()+i+Math.floor(Math.random()*1e4);arr.push(o);a++});return{a,dd,bad}};
+  const isJ=/\.json$/i.test(f.name),rd=new FileReader(),key=o=>o.src?'id|'+o.src:[o.bank,o.P,o.r,o.months,o.start].join('|');
+  const merge=(arr,rows)=>{const have=new Set(arr.flatMap(o=>[[o.bank,o.P,o.r,o.months,o.start].join('|'),'id|'+(o.src||o.id)]));let a=0,dd=0,bad=0;rows.forEach((r,i)=>{const o=norm(r);if(!o){bad++;return}if(have.has(key(o))){dd++;return}have.add(key(o));o.id=Date.now()+i+Math.floor(Math.random()*1e4);arr.push(o);a++});return{a,dd,bad}};
   rd.onload=()=>{try{
     let T={a:0,dd:0,bad:0};
     if(isJ){const j=JSON.parse(rd.result);
@@ -486,7 +472,7 @@ $('#file').onchange=e=>{
         const r=merge(arr,p.fds||[]);T.a+=r.a;T.dd+=r.dd;T.bad+=r.bad;if(pr.id!==PID)localStorage.setItem(kOf(pr.id),JSON.stringify(arr))});
         (j.templates||[]).forEach(t=>{if(t&&t.name&&!TPL.some(x=>x.name===t.name))TPL.push(t)});saveTpl();saveProfs()}
       else T=merge(fds,Array.isArray(j)?j:(j.fds||[]))}
-    else{const wb=XLSX.read(rd.result,{type:'array'});T=merge(fds,XLSX.utils.sheet_to_json(wb.Sheets['FDs']||wb.Sheets[wb.SheetNames[0]],{defval:''}))}
+    else{const wb=XLSX.read(rd.result,{type:'array'});T=merge(fds,XLSX.utils.sheet_to_json(wb.Sheets['FDs']||wb.Sheets['FD_Records']||wb.Sheets[wb.SheetNames[0]],{defval:''}))}
     persist();renderProfs();renderTpl();render();
     msg('Imported '+T.a+' record(s)'+(T.dd?', skipped '+T.dd+' duplicate(s)':'')+(T.bad?', '+T.bad+' invalid row(s) ignored':'')+'.');
   }catch(err){msg('Could not read that file. Use a JSON or Excel file exported from this app.')}};
@@ -596,7 +582,7 @@ function importCal(){
 $('#settings').addEventListener('click',e=>{
   if(e.target.closest('[data-calimp]'))importCal();
   if(e.target.closest('[data-calrst]')){const keep=getStart();BSD0.forEach((r,i)=>BSD[i]=r.slice());BSOV={};try{localStorage.setItem('fd-bsov','{}')}catch(x){}rebuildMS();if(keep)setBS(keep);CALMSG='All years reset to the built-in data.';render();preview();renderSet();applyLang()}});
-$('#settings').addEventListener('change',e=>{if(e.target.id==='calF'){const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{$('#calT').value=String(rd.result)};rd.readAsText(f)}});
+$('#settings').addEventListener('change',e=>{if(e.target.id==='calF'){const f=e.target.files[0];e.target.value='';if(!f)return;const rd=new FileReader();rd.onload=()=>{$('#calT').value=String(rd.result)};rd.readAsText(f)}});
 /* share summary */
 const fqOf=o=>o.freq==='q'?'Bank quarter-end':o.freq==='0'?'At maturity':o.freq==='c'?'Every '+o.f+' months':({1:'Monthly',3:'Quarterly',6:'Half-yearly',12:'Annually'})[o.f];
 function summaryText(o){const c=calc(o);return '🏦 '+o.bank+(o.tag?' ('+o.tag+')':'')+'\nPrincipal: '+NPR(o.P)+'\nRate: '+o.r+'% p.a. · '+o.months+' months\nStart: '+dtxt(pd(o.start))+'\nMaturity: '+dtxt(c.end)+'\nInterest: '+fqOf(o)+(o.mode==='compound'?' (compounded)':' (paid out)')+'\nNet interest (after '+o.tds+'% TDS): '+NPR(c.net)+'\nTotal at maturity: '+NPR(c.total)+'\n— FD Manager Nepal'}
@@ -636,4 +622,75 @@ function dailyPopup(){
 setTimeout(dailyPopup,600);
 $('#start').value=iso(new Date());fillBS();setBS(iso(new Date()));
 preview();render();
+/* ---------- v6: Excel summary drawer (separate data store: fd-sum-v1) ---------- */
+const SDK='fd-sum-v1';let SD={fd:[],mat:[],holders:[]},SDH='';
+try{SD=JSON.parse(localStorage.getItem(SDK))||SD}catch(e){}
+const sdSave=()=>{try{localStorage.setItem(SDK,JSON.stringify(SD))}catch(e){}},sdMsg=t=>{$('#sdMsg').textContent=t};
+function sdOpen(v){$('#sd').classList.toggle('open',!!v);$('#sdBk').classList.toggle('open',!!v);$('#sd').setAttribute('aria-hidden',v?'false':'true');if(v){sdRender();$('#sdX').focus()}else $('#sdOpen').focus()}
+function sdDate(v){if(typeof v==='number')return normDate(v);const s=String(v==null?'':v).trim();let m=s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');return s?normDate(s)||'':''}
+function sdRow(r){const m={};for(const k in r)m[k.toLowerCase().replace(/[^a-z]/g,'')]=r[k];const s=k=>String(m[k]==null?'':m[k]).trim(),d=parseFloat(m.duration)||0,u=s('durationunit')||'Months';
+  return{id:s('id')||'x'+Math.random().toString(36).slice(2,10),holder:s('accountholder')||'—',bank:s('bank')||'—',amount:parseFloat(m.amount)||0,duration:d,unit:u,rate:parseFloat(m.rate)||0,start:sdDate(m.startdate),mat:sdDate(m.maturitydate),cert:s('certificatestatus')||'Not Obtained',notes:s('notes'),created:s('createdat'),fdNumber:s('fdnumber'),certificate:s('certificate'),updated:s('updatedat'),status:s('status'),matured:sdDate(m.matureddate)}}
+function sdModel(){
+  const t0=day0(),f=z=>!SDH||z.holder===SDH,A=SD.fd.filter(z=>!/^(matured|closed|cancel)/i.test(z.status)&&f(z)),M=SD.mat.filter(f);
+  const S=(a,g)=>a.reduce((s,z)=>s+g(z),0),G=(a,k)=>{const g={};a.forEach(z=>{const x=g[z[k]]||(g[z[k]]={k:z[k],n:0,p:0,w:0});x.n++;x.p+=z.amount;x.w+=z.amount*z.rate});return Object.values(g).map(x=>({...x,r:x.p?x.w/x.p:0})).sort((a,b)=>b.p-a.p)};
+  const P=S(A,z=>z.amount),W=S(A,z=>z.amount*z.rate),mo={};
+  const rows=A.map(z=>({...z,dl:z.mat?Math.ceil((pd(z.mat)-t0)/864e5):null})).sort((a,b)=>(a.mat||'9')<(b.mat||'9')?-1:1);
+  rows.forEach(z=>{const b=z.mat&&ad2bs(z.mat);if(!b)return;const k=b.y*12+b.m-1,x=mo[k]||(mo[k]={k,l:BSN[b.m-1].slice(0,3)+' '+String(b.y).slice(2),p:0,n:0});x.p+=z.amount;x.n++});
+  return{A,M,P,rows,int:W/100,r:P?W/P:0,bank:G(A,'bank'),holder:G(A,'holder'),cert:G(A,'cert'),mh:G(M,'holder'),mp:S(M,z=>z.amount),mo:Object.values(mo).sort((a,b)=>a.k-b.k)}}
+function sdRender(){
+  const B=$('#sdBody');
+  if(!SD.fd.length&&!SD.mat.length){B.innerHTML='<div class="card empty"><span>Import your FD Excel backup (sheets FD_Records, Matured_Records, Account_Holders) to see the summary.</span></div>';applyLang();return}
+  const m=sdModel(),names=[...new Set([...SD.holders.map(h=>h.name),...SD.fd.map(z=>z.holder),...SD.mat.map(z=>z.holder)])];
+  const tb=(h,r)=>`<div class="tw"><table style="min-width:300px"><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${r.map(c=>`<tr>${c.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</table></div>`;
+  const grp=(a,h)=>tb([h,'FDs','Principal','Share','Avg rate'],a.map(x=>[esc(x.k),x.n,NPR(x.p),(m.P?x.p/m.P*100:0).toFixed(1)+'%',x.r.toFixed(2)+'%']));
+  const mx=Math.max(1,...m.mo.map(z=>z.p));
+  B.innerHTML=`<div class="chips">${['',...names].map(n=>`<span class="chip${n===SDH?' on':''}" data-sdh="${esc(n)}">${n?esc(n):'All'}</span>`).join('')}</div>
+  <div class="kpi" style="margin-top:12px"><div class="tile main"><span>Active principal</span><b>${NPR(m.P)}</b></div><div class="tile"><span>Active FDs</span><b>${m.A.length}</b></div><div class="tile"><span>Weighted avg rate</span><b>${m.r.toFixed(2)}%</b></div><div class="tile"><span>Est. annual interest (gross)</span><b>${NPR(m.int)}</b></div><div class="tile"><span>Matured (history)</span><b>${m.M.length} · ${K(m.mp)}</b></div></div>
+  <div class="card"><b>By bank</b>${grp(m.bank,'Bank')}</div><div class="card"><b>By account holder</b>${grp(m.holder,'Holder')}</div><div class="card"><b>Certificate status</b>${grp(m.cert,'Status')}</div>
+  <div class="card"><b>Active FDs by maturity</b>${tb(['Bank','Holder','Amount','Rate','Maturity','Left','Certificate'],m.rows.map(z=>[esc(z.bank),esc(z.holder),NPR(z.amount),z.rate+'%',z.mat?dstr(pd(z.mat),1):'–',z.dl==null?'–':z.dl<0?'Overdue':z.dl+' d'+(z.dl<=30?' ⚠️':''),esc(z.cert)]))}</div>
+  <div class="card"><b>Maturity by BS month</b><div class="cols">${m.mo.map(z=>`<div class="col">${K(z.p)}<i style="height:${z.p/mx*75}%"></i>${z.l}</div>`).join('')}</div></div>
+  <div class="card"><b>Matured history by holder</b>${tb(['Holder','FDs','Principal','Avg rate'],m.mh.map(x=>[esc(x.k),x.n,NPR(x.p),x.r.toFixed(2)+'%']))}</div>`;
+  applyLang();
+}
+$('#sdBody').addEventListener('click',e=>{const c=e.target.closest('[data-sdh]');if(c){SDH=c.dataset.sdh;sdRender()}});
+$('#sdOpen').onclick=()=>sdOpen(1);$('#sdX').onclick=$('#sdBk').onclick=()=>sdOpen(0);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#sd').classList.contains('open'))sdOpen(0)});
+$('#sdImp').onclick=()=>$('#sdFile').click();
+$('#sdFile').onchange=e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;if(!window.XLSX)return sdMsg('Excel library did not load.');
+  const rd=new FileReader();rd.onload=()=>{try{
+    const wb=XLSX.read(rd.result,{type:'array'}),rows=n=>wb.Sheets[n]?XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:''}):null,ok=z=>z.amount>0&&z.start;
+    const fdR=rows('FD_Records')||XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}),fd=fdR.map(sdRow).filter(ok),mat=(rows('Matured_Records')||[]).map(sdRow).filter(ok);
+    const hl=(rows('Account_Holders')||[]).filter(r=>r.name).map(r=>({name:String(r.name).trim(),enabled:!/^(false|0|no)$/i.test(String(r.enabled))}));
+    if(!fd.length&&!mat.length)throw 0;
+    if($('#sdMerge').checked){const mg=(a,b)=>[...new Map([...a,...b].map(z=>[z.id,z])).values()];SD.fd=mg(SD.fd,fd);SD.mat=mg(SD.mat,mat);const hn=new Set(SD.holders.map(h=>h.name));hl.forEach(h=>{if(!hn.has(h.name))SD.holders.push(h)})}
+    else SD={fd,mat,holders:hl};
+    SDH='';sdSave();sdRender();sdMsg('Imported '+fd.length+' active and '+mat.length+' matured record(s)'+(fdR.length-fd.length?', '+(fdR.length-fd.length)+' invalid row(s) skipped':'')+'.');
+  }catch(err){sdMsg('Could not read that file. Use the FD Manager backup (.xlsx) with an FD_Records sheet.')}};
+  rd.readAsArrayBuffer(f)};
+async function sdDl(wb,name){const d=localStorage.getItem('fd-dirty');await saveFile(name,XLSX.write(wb,{type:'array',bookType:'xlsx'}));try{localStorage.setItem('fd-dirty',d||'0')}catch(e){}renderBk();sdMsg('Exported '+name)}
+$('#sdBkp').onclick=()=>{
+  if(!SD.fd.length&&!SD.mat.length)return sdMsg('Nothing to export. Import a file first.');if(!window.XLSX)return sdMsg('Excel library did not load.');
+  const w=XLSX.utils.book_new(),ap=(n,r)=>XLSX.utils.book_append_sheet(w,r.length?XLSX.utils.json_to_sheet(r):XLSX.utils.aoa_to_sheet([[]]),n),ts=new Date().toISOString();
+  const rec=(z,mt)=>({id:z.id,accountHolder:z.holder,bank:z.bank,amount:z.amount,duration:z.duration,durationUnit:z.unit,rate:z.rate,startDate:z.start,maturityDate:z.mat,certificateStatus:z.cert,notes:z.notes,createdAt:z.created,...(mt?{maturedDate:z.matured,status:z.status||'Matured'}:{}),fdNumber:z.fdNumber,certificate:z.certificate,updatedAt:z.updated,...(mt?{}:{status:z.status})});
+  ap('Metadata',[{version:'4.1',timestamp:ts,totalRecords:SD.fd.length,totalMaturedRecords:SD.mat.length,totalAccountHolders:SD.holders.length,totalTemplates:0,totalCalculations:0,totalComparisons:0}]);
+  ap('FD_Records',SD.fd.map(z=>rec(z,0)));ap('Matured_Records',SD.mat.map(z=>rec(z,1)));ap('Account_Holders',SD.holders.map(h=>({name:h.name,enabled:h.enabled})));['Templates','Calculations','Comparisons'].forEach(n=>ap(n,[]));
+  sdDl(w,'FD-Manager-Backup-'+ts.slice(0,19).replace(/:/g,'-')+'.xlsx')};
+$('#sdRep').onclick=()=>{
+  if(!SD.fd.length&&!SD.mat.length)return sdMsg('Nothing to export. Import a file first.');if(!window.XLSX)return sdMsg('Excel library did not load.');
+  const m=sdModel(),w=XLSX.utils.book_new(),ap=(n,r)=>XLSX.utils.book_append_sheet(w,XLSX.utils.json_to_sheet(r),n),n2=v=>+v.toFixed(2),gr=a=>a.map(x=>({Name:x.k,FDs:x.n,Principal:x.p,'Share %':n2(m.P?x.p/m.P*100:0),'Avg rate %':n2(x.r)}));
+  ap('Overview',[{Metric:'Holder filter',Value:SDH||'All'},{Metric:'Active FDs',Value:m.A.length},{Metric:'Active principal',Value:m.P},{Metric:'Weighted avg rate %',Value:n2(m.r)},{Metric:'Est. annual interest (gross)',Value:n2(m.int)},{Metric:'Matured records',Value:m.M.length},{Metric:'Matured principal',Value:m.mp}]);
+  ap('By Bank',gr(m.bank));ap('By Holder',gr(m.holder));ap('Certificate Status',gr(m.cert));
+  ap('Active FDs',m.rows.map(z=>({Bank:z.bank,Holder:z.holder,Amount:z.amount,'Rate %':z.rate,Start:z.start,'Start (BS)':bst(z.start),Maturity:z.mat,'Maturity (BS)':bst(z.mat),'Days left':z.dl==null?'':z.dl,Certificate:z.cert,Notes:z.notes})));
+  ap('Maturity by BS Month',m.mo.map(z=>({Month:z.l,FDs:z.n,Principal:z.p})));ap('Matured by Holder',m.mh.map(x=>({Holder:x.k,FDs:x.n,Principal:x.p,'Avg rate %':n2(x.r)})));
+  sdDl(w,'fd-summary-'+iso(new Date())+'.xlsx')};
+$('#sdClr').onclick=e=>{const b=e.target;if(b.dataset.sure){SD={fd:[],mat:[],holders:[]};SDH='';sdSave();sdRender();b.dataset.sure='';b.textContent='Clear';sdMsg('Summary data cleared.')}else{b.dataset.sure=1;b.textContent='Tap again to confirm';setTimeout(()=>{b.dataset.sure='';b.textContent='Clear'},4000)}};
+
+$('#sdTo').onclick=()=>{
+  const m=sdModel();if(!m.A.length)return sdMsg('No active records to add.');
+  const have=new Set(fds.map(o=>String(o.src||o.id)));let a=0,d=0,bad=0;
+  m.A.forEach(z=>{if(have.has(z.id)){d++;return}const mo=Math.round(z.duration*(/year/i.test(z.unit)?12:1));if(!(mo>=1)||!z.start){bad++;return}
+    fds.push({id:uid()+a,src:z.id,bank:z.bank,holder:z.holder==='—'?'':z.holder,tag:'',P:z.amount,r:z.rate,months:mo,start:z.start,tds:5,mode:'payout',basis:'bs',freq:'q',f:3});have.add(z.id);a++});
+  if(a){persist();render()}
+  sdMsg('Added '+a+' FD(s) to My FDs'+(d?', skipped '+d+' already added':'')+(bad?', '+bad+' invalid':'')+'. They use 5% TDS and bank quarter-end payouts; edit any FD to change that.')};
 </script></body></html>
